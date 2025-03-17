@@ -18,7 +18,7 @@ def show_login_page():
             return render_template('login_result.html', message = "Password missing")
         session["groupid"] = request.form.get("loggroupid")
         session["password"] = request.form.get("logpass")
-        return render_template('login_result.html', message = "You are logged in")
+        return render_template('login_result.html', message = "You are logged in", name = request.form.get("loggroupid"))
     return render_template('login.html')
 
 if __name__ == "__main__":

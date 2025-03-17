@@ -9,7 +9,10 @@
 			<div class="row full-height justify-content-center">
 				<div class="col-12 text-center align-self-center py-5">
 					<div class="section pb-5 pt-5 pt-sm-2 text-center">
-						{{ message }}
+                        <h2 class="message">{{ message }}</h2>
+                        {% if name %}
+                        <h1 class="welcome-text">Welcome, {{ name }}!</h1>
+                        {% endif %}
 			      	</div>
 		      	</div>
 	      	</div>
