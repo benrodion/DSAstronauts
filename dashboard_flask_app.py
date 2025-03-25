@@ -8,27 +8,11 @@ app.config["SESSION_PERMANENT"] = False # not sure if this is the right configur
 app.config["SESSION_TYPE"] = "filesystem" # not sure if this is the right configuration
 Session(app)
 
-app = Flask(__name__)  # create the instance of the flask class
 
-@app.route('/', methods=["GET","POST"])
-def show_login_page():
-    if request.method == "POST": # this implements login logic, but not signup yet
-        if not request.form.get("loggroupid"):
-            return render_template('login_result.html', message = "Group name missing")
-        elif not request.form.get("logpass"):
-            return render_template('login_result.html', message = "Password missing")
-        session["groupid"] = request.form.get("loggroupid")
-        session["password"] = request.form.get("logpass")
-        return render_template('login_result.html', message = "You are logged in", name = request.form.get("loggroupid"))
-    return render_template('login.html')
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def dashboard():
     if request.method == 'POST':
-        if request.form.get("tripSelection") == "Choose...":
+        if not request.form.get("tripSelection"):
             return render_template('dashboard.html', message = "Trip selection missing")
         elif not request.form.get("yourtripname"):
             return render_template('dashboard.html', message = "Trip name missing")
@@ -45,3 +29,23 @@ def dashboard():
         return render_template('transactions.html', message = 'You have succefully created a trip!', trip_name = request.form.get("yourtripname"))
 
     return render_template('dashboard.html')
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+def button_trip_type(selection:str) -> bool:
+    if selection == str(selection):
+        return "Great you have selected a trip!"
+
+
+
+ if trip_inputed == "" and trip_button == "":
+            return render_template('dashboard.html',
+                                   printed_result='Either select a trip or inpute one to continue to transactions.')
+
+try:
+            trip_button, trip #figure out how to save in flask sessions
+        except ValueError:
+            return render_template('dashboard.html', printed_result="Cannot creat trip with this input.")
+
