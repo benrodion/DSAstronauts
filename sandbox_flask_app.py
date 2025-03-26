@@ -3,6 +3,8 @@
 from flask import Flask, render_template, request, redirect, session
 from database import SessionLocal, UserGroup
 from flask_session import Session
+import bcrypt
+from helpers import check_bad_password
 
 app = Flask(__name__)  # create the instance of the flask class
 
@@ -23,10 +25,10 @@ def show_login_page():
 
         # Create a database session
         db = SessionLocal()
-        user = db.query(UserGroup).filter(UserGroup.username == groupid, UserGroup.password == password).first()
+        user = db.query(UserGroup).filter(UserGroup.username == groupid).first()
         db.close()
 
-        if user:
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             session["groupid"] = groupid
             return render_template('login_result.html', message="You are logged in", name=groupid)
         else:
@@ -46,6 +48,9 @@ def signup():
 
         if not username or not password:
             return render_template('signup_result.html', message="Username or password missing")
+        
+        if check_bad_password(password):
+            return render_template('signup_result.html', message=check_bad_password(password))
 
         db = SessionLocal()
 
