@@ -17,16 +17,16 @@ class UserGroup(Base):
     username = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
 
-# Define Transactions table
 class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, index=True)
     transaction_name = Column(String, nullable=False)
-    payer = Column(Integer, ForeignKey("user_groups.id"), nullable=False)
+    payer = Column(String, nullable=False)  
     amount = Column(Float, nullable=False)
     participants = Column(String, nullable=False)  # Store participant IDs as comma-separated values
+    user_id = Column(Integer, ForeignKey("user_groups.id"), nullable=False)  # Foreign key reference to users
 
-    payer_user = relationship("UserGroup")
+    user = relationship("UserGroup")
 
 # Function to initialize the database
 def init_db():
