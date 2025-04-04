@@ -1,7 +1,6 @@
 from collections import defaultdict
 from math import inf
 
-#CAREFUL: I'VE CHANGED THE SIGN FOR THE AMOUNT FOR CREDITOR AND DEBTOR HERE (compared to the function in splitwise.py)
 
 class OptimalSplit:
     """
@@ -19,108 +18,58 @@ class OptimalSplit:
         """
         score = defaultdict(int) # default value of every new key in the score-dict is set to 0 
 
-        #final dictionary has names of group members as keys and the total amount owed/borrowed as value 
+        #creates score-dict. Keys: names of group members, Values: total amount owed/borrowed
         for lender, borrower, amount in transactions:
             score[lender] += amount
             score[borrower] -= amount
-        #to check 
+         # for us to check what's going on 
         print(score)
 
 
-        # Remove settled accounts
+        # remove settled accounts (accounts with balance = 0)
         debt = {person: amt for person, amt in score.items() if amt != 0}
         people = list(debt.keys())
         balances = list(debt.values())
 
-        #to check 
+        #to check that all accounts with balance 0 have been removed 
         print(debt)
 
         def dfs(start, balances, people):
-            # Skip settled debts
+            # skip over people with balance == 0 (settled debts)
             while start < len(balances) and balances[start] == 0:
                 start += 1
+            # base case: there are no balances to settle --> return 0 (0 payments need to be made) and empty list of transactions    
             if start == len(balances):
                 return 0, []
-
-            min_txns = inf
+            #initialize minimum number of payments and optimal transaction list
+            min_payments = inf
             best_path = []
 
+            # attempt debt settling by pairing balances[start] with each of the later people in the list 
             for i in range(start + 1, len(balances)):
-                if balances[start] * balances[i] < 0:
+                if balances[start] * balances[i] < 0:# ensures that only debtors & creditors can be paired, not debtor & debtor or creditor & creditor
                     # Try settling start with i
-                    balances[i] += balances[start]
-                    amount = min(abs(balances[start]), abs(balances[i] - balances[start]))
-
+                    balances[i] += balances[start] # simulate payment --> adjust i's balance as if they'd received/given money
+                    amount = min(abs(balances[start]), abs(balances[i] - balances[start]))#amount being paid in the simulated transaction 
+                    
+                    # determine direction of payment: from start to i or from i to start
                     if balances[start] < 0:
                         path = [(people[start], people[i], amount)]
                     else:
                         path = [(people[i], people[start], amount)]
 
-                    txns, next_path = dfs(start + 1, balances[:], people)
-                    if txns + 1 < min_txns:
-                        min_txns = txns + 1
+                    # recursive settlement of remaining debt 
+                    payments, next_path = dfs(start + 1, balances[:], people)
+                    if payments + 1 < min_payments: # if path results in fewer payments than before, update best solution 
+                        min_payments = payments + 1
                         best_path = path + next_path
 
                     balances[i] -= balances[start]  # backtrack
 
-            return min_txns if best_path else 0, best_path
-
-        _, transactions = dfs(0, balances, people)
-        return transactions
-
-
-    """
-    Core algorithm for debt splitting with minimal amount of payments.
-
-    Attributes: None
-    """
-
-    def nTransfers(self, transactions):
-        """
-        Calculates the minimum amount of transactions required for debt settlement.
-
-        Args:
-        - transactions: a list of [lender, borrower, amount] entries.
-        """
-        score = defaultdict(int) # default value of every new key in the score-dict is set to 0 
-
-        #final dictionary has names of group members as keys and the total amount owed/borrowed as value 
-        for l, b, a in transactions: # l = lender, d = debtor, a = amount
-            score[l] -= a #reduce score of lender by amount they lent
-            score[b] += a #increase score of borrower by amount borrowed
-
-        # iteratore over dictionary and separate into debtors and lenders
-        positives = [val for val in score.values() if val > 0] #exttract all positive values
-        negatives = [val for val in score.values() if val < 0] #exttract all negative values
-
-        def recurse(positives, negatives):
-            if len(positives) + len(negatives) == 0:
-                return 0
-            negative = negatives[0]
-            count = inf
-
-            for positive in positives:
-                #create copies of positives and negatives to store updated values
-                new_positives = positives.copy()
-                new_negatives = negatives.copy()
-
-                # initially removes the positive and negative from the copied list
-                # if positive and negative are satisfied with the transction, we don't do anything
-                # if the positive isn't satisfied, we add what remains to be paid back to the list int elif-statement
-                # if the positive value does not satisfy the negative value, we add the remaining negative value back to the list
-                new_positives.remove(positive)
-                new_negatives.remove(negative)
+        # run recursive function starting from first unsettled person     
+        _, result = dfs(0, balances, people)
+        
+        return results
 
 
-                if positive == -negative:
-                    pass #we don't worry about this
-                elif positive > -negative:
-                    new_positives.append(positive+negative)
-                else:
-                    new_negatives.append(positive+negative)
-
-                #from all positive values, we iterate over, try to get the one that matches best with the given negative value
-                count = min(count, recurse(new_positives, new_negatives))
-
-
-            return count +1, recurse(positives, negatives)
+   
