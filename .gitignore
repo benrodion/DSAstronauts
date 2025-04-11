@@ -1,0 +1,18 @@
+# Byte-compiled / optimized Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore all database files
+*.db
+
+# Ignore virtual environments
+venv/
+
+# Ignore VS Code settings
+.vscode/
+
+# System files (Mac & Windows)
+.DS_Store
+Thumbs.db
