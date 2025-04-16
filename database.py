@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, BigInteger, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -10,23 +10,49 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Define User Groups table
-class UserGroup(Base):
-    __tablename__ = "user_groups"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
 
-# Define Transactions table
+class Group(Base):
+    __tablename__ = 'groups'
+    group_id = Column(Integer, primary_key=True)
+    groupname = Column(String)
+    password = Column(String)
+
+    trips = relationship("Trip", back_populates="group")
+
+
+class Trip(Base):
+    __tablename__ = 'trips'
+    trip_id = Column(BigInteger, primary_key=True)
+    tripname = Column(String)
+    triptype = Column(Integer)
+    group_id = Column(BigInteger, ForeignKey('groups.group_id'))
+
+    group = relationship("Group", back_populates="trips")
+    transactions = relationship("Transaction", back_populates="trip")
+
+
 class Transaction(Base):
-    __tablename__ = "transactions"
-    id = Column(Integer, primary_key=True, index=True)
-    transaction_name = Column(String, nullable=False)
-    payer = Column(Integer, ForeignKey("user_groups.id"), nullable=False)
-    amount = Column(Float, nullable=False)
-    participants = Column(String, nullable=False)  # Store participant IDs as comma-separated values
+    __tablename__ = 'transactions'
+    trans_id = Column(BigInteger, primary_key=True)
+    tr_name = Column(String)
+    amount = Column(BigInteger)
+    trip_id = Column(BigInteger, ForeignKey('trips.trip_id'))
 
-    payer_user = relationship("UserGroup")
+    trip = relationship("Trip", back_populates="transactions")
+    participants = relationship("Participant", back_populates="transaction")
+
+
+class Participant(Base):
+    __tablename__ = 'participants'
+    p_id = Column(BigInteger, primary_key=True)
+    name = Column(String)
+    is_payer = Column(Boolean)
+    trans_id = Column(BigInteger, ForeignKey('transactions.trans_id'))
+
+    transaction = relationship("Transaction", back_populates="participants")
+
+
+    
 
 # Function to initialize the database
 def init_db():
