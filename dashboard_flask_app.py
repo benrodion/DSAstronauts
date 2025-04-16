@@ -17,15 +17,15 @@ def dashboard():
         elif not request.form.get("yourtripname"):
             return render_template('dashboard.html', message = "Trip name missing")
         
-        trip_buttion_str = str(request.form.get['tripSelection'])
+        trip_button_str = str(request.form.get('tripSelection')) 
 
         # make sure the input is one of the allowed inputs (not absolutely necessary in the drop-down case)
-        if trip_buttion_str not in ['Beach Trip', 'Dinner', 'Skiing Trip', 'Museum Trip', 'Movies', 'Other']:
+        if trip_button_str not in ['Beach Trip', 'Dinner', 'Skiing Trip', 'Museum Trip', 'Movies', 'Other']:
             return render_template('dashboard.html',
                                    printed_result='You must select one of the trip types.')
         
-        session["trip_type"] = request.form.get['tripSelection']
-        session["trip_name"] = request.form.get['yourtripname']
+        session["trip_type"] = request.form.get('tripSelection') 
+        session["trip_name"] = request.form.get('yourtripname')
         return render_template('transactions.html', message = 'You have succefully created a trip!', trip_name = request.form.get("yourtripname"))
 
     return render_template('dashboard.html')
@@ -34,18 +34,22 @@ def dashboard():
 if __name__ == "__main__":
     app.run(debug=True)
 
-def button_trip_type(selection:str) -> bool:
+def button_trip_type(selection:str) -> str:
     if selection == str(selection):
         return "Great you have selected a trip!"
 
 
 
- if trip_inputed == "" and trip_button == "":
-            return render_template('dashboard.html',
-                                   printed_result='Either select a trip or inpute one to continue to transactions.')
+ # --- PLACEHOLDER FOR FUTURE INPUT LOGIC ---
+# These are examples of ideas to explore later.
 
-try:
-            trip_button, trip #figure out how to save in flask sessions
-        except ValueError:
-            return render_template('dashboard.html', printed_result="Cannot creat trip with this input.")
+# TODO: Allow user to either select a trip OR write one manually
+# if trip_inputed == "" and trip_button == "":
+#     return render_template('dashboard.html',
+#                            printed_result='Either select a trip or input one to continue.')
+
+# try:
+#     trip_button, trip  # figure out how to save in flask sessions
+# except ValueError:
+#     return render_template('dashboard.html', printed_result="Cannot create trip with this input.")
 
