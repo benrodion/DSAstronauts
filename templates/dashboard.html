@@ -10,6 +10,9 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
     <!-- FontAwesome -->
     <script src="https://kit.fontawesome.com/aabba25cda.js" crossorigin="anonymous"></script>
 
@@ -91,6 +94,49 @@
         .select{
             font-family: 'Font Awesome 5 Free' , 'arial'
         }
+        .trip-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .trip-item {
+            background-color: #f9e5e3;
+            border: 1px solid #c04154;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .trip-form {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trip-label {
+            color: #c04154;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .trip-button {
+            background-color: white;
+            color: #c04154;
+            border: 1px solid #c04154;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .trip-button:hover {
+            background-color: #c04154;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -110,7 +156,7 @@
                 <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
             </ul>
             <ul class="navbar-nav navbar-right">
-              <li class ="nav-item"></li><a class = "nav-link" href="#"><span class="fas fa-door-open pe-2"></span>Login</a></li>
+              <li class ="nav-item"></li><a class = "nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Login</a></li>
             </ul>
         </div>
     </div>
@@ -133,7 +179,7 @@
     <div class="block center-block">
       <h6 class="mb-0 pb-3"> <span>Create a trip by selecting an option or inputing your own description</span></h6> 
       <div class ="inner-block">
-        <form method="post"></form>
+        <form method="post">
         <label for="tripSelection" class="form-label navbar-brand-text">Pick a Trip</label>
         <select id="tripSelection" name = "tripSelection" class="selectpicker form-select" data-show-icon="true">
           <option value="" selected>Choose...</option>
@@ -153,8 +199,31 @@
           <i class="material-icons">groups</i>
         </div>	
       <br>
-        <button type = "submit" class="btn btn-danger">Create Trip</button>
-      </form>
+      <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-danger">Create Trip</button>
+      </div>
+        </form>
+      <br>
+      {% if previous_trips %}
+  <h2>Previous Trips</h2>
+  <ul class="trip-list">
+    {% for trip in previous_trips %}
+      <li class="trip-item">
+        <form method="post" action="{{ url_for('transactions') }}" class="trip-form">
+          <input type="hidden" name="trip_id" value="{{ trip.trip_id }}">
+          <span class="trip-label">
+            {{ trip.tripname }} <small>({{ trip.triptype }})</small>
+          </span>
+          <button type="submit" class="trip-button">View</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+  
+    
+{% else %}
+  <p>No previous trips yet.</p>
+{% endif %}
         <br>
         <br>
         <br>
