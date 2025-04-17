@@ -9,27 +9,21 @@ app.config["SESSION_TYPE"] = "filesystem" # not sure if this is the right config
 Session(app)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
+    selected_type = str(request.form.get("tripSelection"))
+    trip_name = str(request.form.get("yourtripname"))
     if request.method == 'POST':
-        if not request.form.get("tripSelection"):
-            return render_template('dashboard.html', message = "Trip selection missing")
-        elif not request.form.get("yourtripname"):
-            return render_template('dashboard.html', message = "Trip name missing")
-        
-        trip_button_str = str(request.form.get('tripSelection')) 
+        if selected_type not in ['beach', 'dinner', 'skiing', 'museum', 'film', 'other']:
+            return render_template('login_result.html', message ="Trip selection missing")
+        elif trip_name == "":
+            return render_template('login_result.html', message ="Trip name missing")
 
-        # make sure the input is one of the allowed inputs (not absolutely necessary in the drop-down case)
-        if trip_button_str not in ['Beach Trip', 'Dinner', 'Skiing Trip', 'Museum Trip', 'Movies', 'Other']:
-            return render_template('dashboard.html',
-                                   printed_result='You must select one of the trip types.')
+        session["trip_type"] = selected_type
+        session["trip_name"] = trip_name
         
-        session["trip_type"] = request.form.get('tripSelection') 
-        session["trip_name"] = request.form.get('yourtripname')
-        return render_template('transactions.html', message = 'You have succefully created a trip!', trip_name = request.form.get("yourtripname"))
-
+        return redirect('/transactions')
     return render_template('dashboard.html')
-
 
 if __name__ == "__main__":
     app.run(debug=True)
