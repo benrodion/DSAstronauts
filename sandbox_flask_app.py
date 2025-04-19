@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, redirect, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, session, jsonify, flash, url_for
 from database import SessionLocal, Group, Trip, Transaction, Participant 
 from flask_session import Session
 import bcrypt
 from helpers import check_bad_password
 from sqlalchemy import distinct
-
+from forms import *
+from flask_wtf import CSRFProtect
 
 app = Flask(__name__)  # create the instance of the flask class
+app.secret_key = 'keyyyy'
+csrf = CSRFProtect(app)
+
+app.config['WTF_CSRF_ENABLED'] = False # I temporarily turned it off cause it breakes everything (Sofiya)
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -84,7 +89,7 @@ def dashboard():
     if request.method == 'POST':
         # Get form values
         selected_type = request.form.get("tripSelection", "")
-        trip_name = request.form.get("yourtripname", "")
+        tripname = request.form.get("yourtripname", "")
         
         # Validation
         if selected_type not in ['beach', 'dinner', 'skiing', 'museum', 'film', 'other']:
@@ -92,13 +97,13 @@ def dashboard():
             return render_template('login_result.html', 
                                   message="Trip selection missing")
                                   
-        if not trip_name:
+        if not tripname:
             db.close()
             return render_template('login_result.html', 
                                   message="Trip name missing")
         
         # Check if trip exists
-        existing_trip = db.query(Trip).filter(Trip.tripname == trip_name, Trip.group_id == session['group_id']).first()
+        existing_trip = db.query(Trip).filter(Trip.tripname == tripname, Trip.group_id == session['group_id']).first()
         if existing_trip:
             db.close()
             return render_template('dashboard.html', 
@@ -106,16 +111,16 @@ def dashboard():
         
         # Create new trip
         session["trip_type"] = selected_type
-        session["trip_name"] = trip_name
+        session["tripname"] = tripname
         
-        new_trip = Trip(tripname=trip_name, triptype=selected_type, group_id=session["group_id"])
+        new_trip = Trip(tripname=tripname, triptype=selected_type, group_id=session["group_id"])
         db.add(new_trip)
         db.commit()
         db.refresh(new_trip)
         session["trip_id"] = new_trip.trip_id
         db.close()
         
-        return render_template('transactions.html', trip_name=new_trip.tripname, trip_id=new_trip.trip_id)
+        return render_template('transactions.html', tripname=new_trip.tripname, trip_id=new_trip.trip_id)
    
     db.close()
     return render_template('dashboard.html', previous_trips=previous_trips)
@@ -123,17 +128,26 @@ def dashboard():
 
 @app.route('/transactions', methods=['GET', 'POST'])
 def transactions():
+    if request.method == 'POST':
+        trip_id = request.form.get('trip_id')
+        if trip_id:
+            session['trip_id'] = trip_id
+
     if "trip_id" not in session:
         return redirect('/')
+
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
-        
-    current_trip_id = session["trip_id"]    
 
+    current_trip_id = session["trip_id"]
     db = SessionLocal()
+    add_tr_form = AddTransactionForm()
+    edit_tr_form = EditTransactionForm()
+    delete_tr_form = DeleteTransactionForm()
     
     # Retrieve only transactions related to the user's group_id
     transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
+    tripname = db.query(Trip).filter(Trip.trip_id == current_trip_id).first().tripname
     
     # Get all participants for the forms (filtered by group)
     participants =(
@@ -173,13 +187,23 @@ def transactions():
         })
 
     db.close()
-    trip_name = session.get("trip_name", "Your Trip")
+
+
+    add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + [("other", "Other (Type Name)")]
+    add_tr_form.participants.choices = [(p, p) for p in unique_participants]
+
+    session['unique_payers'] = list(unique_payers)
+    session['unique_participants'] = list(unique_participants)
+
 
     return render_template("transactions.html", 
                         transactions=transactions_data, 
                         unique_payers=list(unique_payers),
                         unique_participants=list(unique_participants),
-                        trip_name=trip_name)
+                        tripname=tripname,
+                        add_tr_form=add_tr_form,
+                        edit_tr_form=edit_tr_form,
+                        delete_tr_form=delete_tr_form)
 
 
 @app.route('/transactions/add', methods=["POST"])
@@ -187,44 +211,42 @@ def add_transaction():
     if "group_id" not in session or "trip_id" not in session:
         return redirect('/')
     
+    add_tr_form = AddTransactionForm()
+
     db = SessionLocal()
     try:
-        # Get form data with error handling
-        transaction_name = request.form.get("transaction_name")
-        amount = request.form.get("amount")
-        
-        # Handle payer selection
-        payer = request.form.get("payer")
-        payer_custom = request.form.get("payer_custom")
-        
-        # If "other" is selected, use the custom input field
-        if payer == "other" and payer_custom:
-            payer = payer_custom.strip()
-        
-        # Get participants from both sources
-        selected_participants = request.form.getlist("participants") 
-        new_participants_str = request.form.get("participants_names", "")
-        new_participants = [p.strip() for p in new_participants_str.split(",") if p.strip()]
-        
-        # Combine both lists
-        participant_names = selected_participants + new_participants
-        
-        # Validate required data
-        if not transaction_name or not amount or not payer or not participant_names:
-            flash("Please fill in all required fields", "danger")
-            return redirect('/transactions')
-        
-        # Make sure the payer is in the participants list
-        if payer.strip().lower() not in [p.strip().lower() for p in participant_names]:
-            participant_names.append(payer)
             
-        # Create new Transaction
-        new_transaction = Transaction(
-            tr_name=transaction_name,
-            amount=float(amount),
-            trip_id=session["trip_id"]
-        )
-        db.add(new_transaction)
+        add_tr_form.payer.choices = [(payer, payer) for payer in session['unique_payers']] + [("other", "Other (Type Name)")]
+        add_tr_form.participants.choices = [(p, p) for p in session['unique_participants']]
+
+        if add_tr_form.validate_on_submit():
+            transaction_name = add_tr_form.transaction_name.data
+            amount = add_tr_form.amount.data
+            
+            payer = add_tr_form.payer.data
+            payer_custom = add_tr_form.payer_custom.data.strip()
+            
+            if payer == "other" and payer_custom:
+                payer = payer_custom
+            
+            selected_participants = add_tr_form.participants.data
+            new_participants = [p.strip() for p in add_tr_form.participants_names.data.split(",") if p.strip()]
+            participant_names = selected_participants + new_participants
+
+            if not payer or not participant_names:
+                flash("Please fill in all required fields", "danger")
+                return redirect(url_for('transaction'))
+
+            if payer.lower() not in [p.lower() for p in participant_names]:
+                participant_names.append(payer)
+
+            # Create and save the transaction
+            new_transaction = Transaction(
+                tr_name=transaction_name,
+                amount=float(amount),
+                trip_id=session["trip_id"]
+            )
+            db.add(new_transaction)
         db.commit()
         db.refresh(new_transaction)
         
@@ -251,6 +273,7 @@ def add_transaction():
         
     return redirect('/transactions')
 
+
 @app.route('/transactions/edit/<int:id>', methods=["POST"])
 def edit_transaction(id):
     if "group_id" not in session:
@@ -258,6 +281,7 @@ def edit_transaction(id):
 
     db = SessionLocal()
     transaction = db.query(Transaction).filter(Transaction.trans_id == id).first()
+    edit_tr_form = EditTransactionForm()
 
     if not transaction:
         db.close()
@@ -302,23 +326,30 @@ def edit_transaction(id):
 def delete_transaction(id):
     if "group_id" not in session:
         return redirect('/')
+    
+    delete_tr_form = DeleteTransactionForm()
 
-    db = SessionLocal()
-    transaction = db.query(Transaction).filter(Transaction.trans_id == id).first()
+    if delete_tr_form.validate_on_submit():
+        db = SessionLocal()
+        transaction = db.query(Transaction).filter(Transaction.trans_id == id).first()
 
-    if not transaction:
+        if not transaction:
+            db.close()
+            flash("Transaction not found!", "error")
+            return redirect('/transactions')
+
+        # Delete associated participants first
+        db.query(Participant).filter(Participant.trans_id == transaction.trans_id).delete()
+        db.delete(transaction)
+        db.commit()
         db.close()
-        flash("Transaction not found!", "error")
-        return redirect('/transactions')
 
-    # Delete associated participants first
-    db.query(Participant).filter(Participant.trans_id == transaction.trans_id).delete()
-    db.delete(transaction)
-    db.commit()
-    db.close()
+        flash("Transaction deleted successfully!", "success")
+    else:
+        flash("Invalid delete request (possible CSRF detected)", "error")
 
-    flash("Transaction deleted successfully!", "success")
     return redirect('/transactions')
+
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transactions - {{ trip_name }}</title>
+    <title>Transactions - {{ tripname }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
 
         <!-- Bootstrap CSS -->
@@ -103,7 +103,7 @@
         <br>
     <div class="container mt-4">
         <div class="trip-header d-flex justify-content-between align-items-center">
-            <h1 class = "navbar-brand-text">{{ trip_name }} - Transactions</h1>
+            <h1 class = "navbar-brand-text">{{ tripname }} - Transactions</h1>
             <div>
                 <a href="/calculate-debt" class="btn btn-danger">Calculate Debt</a>
             </div>
@@ -203,24 +203,32 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="/transactions/add" method="post">
+                    {{ add_tr_form.hidden_tag() }} 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="transaction_name" class="form-label">Transaction Name</label>
-                            <input type="text" class="form-control" id="transaction_name" name="transaction_name" required>
+                            {{ add_tr_form.transaction_name.label(class="form-label") }}
+                            {{ add_tr_form.transaction_name(class="form-control", id="transaction_name") }}
+                            {% if add_tr_form.transaction_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in add_tr_form.transaction_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="payer" class="form-label">Payer</label>
-                            <select class="form-select" id="payer" name="payer" required onchange="togglePayerInput()">
-                                <option value="" selected disabled>Select payer</option>
-                                {% for payer in unique_payers %}
-                                <option value="{{ payer }}">{{ payer }}</option>
-                                {% endfor %}
-                                <option value="other">Other (Type Name)</option>
-                            </select>
+                            {{ add_tr_form.payer.label(class="form-label") }}
+                            {{ add_tr_form.payer(class="form-select", id="payer", onchange="togglePayerInput()") }}
+                            {% if add_tr_form.payer.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in add_tr_form.payer.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                             
-                            <input type="text" id="payerInput" name="payer_custom" class="form-control mt-2" 
-                                placeholder="Enter payer name" style="display: none;">
-
+                            {{ add_tr_form.payer_custom(class="form-control mt-2", id="payerInput", placeholder="Enter payer name", style="display: none;") }}
+                
                             <script>
                                 function togglePayerInput() {
                                     var select = document.getElementById("payer");
@@ -238,23 +246,26 @@
                             </script>
                         </div>
                         <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+                            {{ add_tr_form.amount.label(class="form-label") }}
+                            {{ add_tr_form.amount(class="form-control", step="0.01", id="amount") }}
+                            {% if add_tr_form.amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in add_tr_form.amount.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="participants" class="form-label">Participants</label>
-                            <select class="form-select" id="participantsSelect" name="participants" multiple>
-                                {% for participant in unique_participants %}
-                                <option value="{{ participant }}">{{ participant }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple participants</small>
+                            <label class="form-label">Participants</label>
+                            <div>
+                                {{ add_tr_form.participants(class="form-select", id="participantsSelect", multiple="multiple") }}
+                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple participants</small>
+                            </div>
                             
-                            <!-- OR enter participants manually -->
                             <h6 class="mt-2 text-center">OR</h6>
                             
-                            <input type="text" class="form-control mt-2" id="participantsInput" name="participants_names" 
-                                placeholder="Enter participant names, separated by commas">
+                            {{ add_tr_form.participants_names(class="form-control mt-2", id="participantsInput", placeholder="Enter participant names, separated by commas") }}
                             
                             <script>
                                 document.addEventListener("DOMContentLoaded", function () {
@@ -263,7 +274,6 @@
                             
                                     participantsSelect.addEventListener("change", function () {
                                         if (this.selectedOptions.length > 0) {
-                                            // Don't disable the input, just mark that we're using the dropdown
                                             participantsInput.dataset.isEmpty = "true";
                                         } else {
                                             participantsInput.dataset.isEmpty = "false";
@@ -272,7 +282,6 @@
                             
                                     participantsInput.addEventListener("input", function () {
                                         if (this.value.trim() !== "") {
-                                            // Don't disable the select, just mark that we're using the input
                                             participantsSelect.dataset.isEmpty = "true";
                                         } else {
                                             participantsSelect.dataset.isEmpty = "false";
@@ -301,6 +310,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editTransactionForm" action="" method="post">
+                    {{ edit_tr_form.hidden_tag() }} 
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="edit_transaction_name" class="form-label">Transaction Name</label>
@@ -321,7 +331,7 @@
                         <div class="mb-3">
                             <label for="edit_participants" class="form-label">Participants</label>
                             <select class="form-select" id="edit_participants" name="participants" multiple required>
-                                {% for payer in unique_payers %}
+                                {% for payer in unique_participants %}
                                 <option value="{{ payer }}">{{ payer }}</option>
                                 {% endfor %}
                             </select>
@@ -352,6 +362,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <form id="deleteTransactionForm" action="" method="post">
+                        {{ delete_tr_form.hidden_tag() }} 
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </div>
