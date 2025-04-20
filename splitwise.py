@@ -69,7 +69,7 @@ class OptimalSplit:
         # run recursive function starting from first unsettled person     
         _, result = dfs(0, balances, people)
         
-        return results
+        return result
 
 
    
