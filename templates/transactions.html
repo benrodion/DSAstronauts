@@ -233,16 +233,18 @@
                                 function togglePayerInput() {
                                     var select = document.getElementById("payer");
                                     var input = document.getElementById("payerInput");
-                            
+
                                     if (select.value === "other") {
                                         input.style.display = "block";
-                                        input.required = true;
+                                        input.required = true; 
                                     } else {
                                         input.style.display = "none";
-                                        input.required = false;
-                                        input.value = "";
+                                        input.required = false; 
+                                        input.value = ""; 
                                     }
                                 }
+
+                                window.onload = togglePayerInput;
                             </script>
                         </div>
                         <div class="mb-3">

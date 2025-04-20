@@ -81,7 +81,9 @@ def signup():
 def dashboard():
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
-   
+    add_tr_form = AddTransactionForm()
+    edit_tr_form = EditTransactionForm()
+    delete_tr_form = DeleteTransactionForm()
     db = SessionLocal()
     # Fetch previous trips for the group
     previous_trips = db.query(Trip).filter(Trip.group_id == session['group_id']).all()
@@ -120,7 +122,11 @@ def dashboard():
         session["trip_id"] = new_trip.trip_id
         db.close()
         
-        return render_template('transactions.html', tripname=new_trip.tripname, trip_id=new_trip.trip_id)
+        return render_template('transactions.html', tripname=new_trip.tripname,
+                                trip_id=new_trip.trip_id, 
+                                add_tr_form=add_tr_form,
+                                edit_tr_form=edit_tr_form,
+                                delete_tr_form=delete_tr_form)
    
     db.close()
     return render_template('dashboard.html', previous_trips=previous_trips)
@@ -210,14 +216,18 @@ def transactions():
 def add_transaction():
     if "group_id" not in session or "trip_id" not in session:
         return redirect('/')
-    
+        
     add_tr_form = AddTransactionForm()
-
+    
     db = SessionLocal()
     try:
-            
-        add_tr_form.payer.choices = [(payer, payer) for payer in session['unique_payers']] + [("other", "Other (Type Name)")]
-        add_tr_form.participants.choices = [(p, p) for p in session['unique_participants']]
+        # Make sure unique_payers exists in session (even if empty)
+        unique_payers = session.get('unique_payers', [])
+        unique_participants = session.get('unique_participants', [])
+        
+        if unique_payers:
+            add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + add_tr_form.payer.choices
+        add_tr_form.participants.choices = [(p, p) for p in unique_participants]
 
         if add_tr_form.validate_on_submit():
             transaction_name = add_tr_form.transaction_name.data
