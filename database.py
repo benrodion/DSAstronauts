@@ -13,7 +13,7 @@ Base = declarative_base()
 
 class Group(Base):
     __tablename__ = 'groups'
-    group_id = Column(Integer, primary_key=True)
+    group_id = Column(Integer, primary_key=True, index = True, autoincrement=True)
     groupname = Column(String)
     password = Column(String)
 
@@ -22,9 +22,9 @@ class Group(Base):
 
 class Trip(Base):
     __tablename__ = 'trips'
-    trip_id = Column(BigInteger, primary_key=True)
+    trip_id = Column(Integer, primary_key=True, index = True, autoincrement=True)
     tripname = Column(String)
-    triptype = Column(Integer)
+    triptype = Column(String)
     group_id = Column(BigInteger, ForeignKey('groups.group_id'))
 
     group = relationship("Group", back_populates="trips")
@@ -33,7 +33,7 @@ class Trip(Base):
 
 class Transaction(Base):
     __tablename__ = 'transactions'
-    trans_id = Column(BigInteger, primary_key=True)
+    trans_id = Column(Integer, primary_key=True, index = True, autoincrement=True)
     tr_name = Column(String)
     amount = Column(BigInteger)
     trip_id = Column(BigInteger, ForeignKey('trips.trip_id'))
@@ -44,7 +44,7 @@ class Transaction(Base):
 
 class Participant(Base):
     __tablename__ = 'participants'
-    p_id = Column(BigInteger, primary_key=True)
+    p_id = Column(Integer, primary_key=True, index = True, autoincrement=True)
     name = Column(String)
     is_payer = Column(Boolean)
     trans_id = Column(BigInteger, ForeignKey('transactions.trans_id'))
