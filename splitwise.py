@@ -66,6 +66,9 @@ class OptimalSplit:
 
                     balances[i] -= balances[start]  # backtrack
 
+            return min_payments, best_path
+
+
         # run recursive function starting from first unsettled person     
         _, result = dfs(0, balances, people)
         

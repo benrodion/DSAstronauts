@@ -8,6 +8,8 @@ from helpers import check_bad_password
 from sqlalchemy import distinct
 from forms import *
 from flask_wtf import CSRFProtect
+from splitwise import OptimalSplit
+from helpers import prepare_transactions_for_split
 
 app = Flask(__name__)  # create the instance of the flask class
 app.secret_key = 'keyyyy'
@@ -360,6 +362,16 @@ def delete_transaction(id):
 
     return redirect('/transactions')
 
+@app.route('/calculate_split')
+def calculate_split():
+    if "trip_id" not in session or "tripname" not in session:
+        return redirect('/dashboard')
+
+    transactions = prepare_transactions_for_split(session["trip_id"])
+    splitter = OptimalSplit()
+    result = splitter.minTransfers(transactions)
+
+    return render_template("split_result.html", result=result, tripname=session["tripname"])
 
 
 if __name__ == "__main__":
