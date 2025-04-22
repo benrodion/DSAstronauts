@@ -366,8 +366,8 @@ def delete_transaction(id):
 def calculate_split():
     if "trip_id" not in session or "tripname" not in session:
         return redirect('/dashboard')
-
-    transactions = prepare_transactions_for_split(session["trip_id"])
+    trip_id = int(session["trip_id"])
+    transactions = prepare_transactions_for_split(trip_id)
     splitter = OptimalSplit()
     result = splitter.minTransfers(transactions)
 
