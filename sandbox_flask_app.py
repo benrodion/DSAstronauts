@@ -46,37 +46,34 @@ def show_login_page():
     return render_template('login.html')
 
 
-@app.route('/signup', methods=["GET", "POST"])
+@app.route('/signup', methods=["POST"])
 def signup():
-    if request.method == "POST":
-        username = request.form.get("newloggroupid")
-        password = request.form.get("newlogpass")
+    username = request.form.get("newloggroupid")
+    password = request.form.get("newlogpass")
 
-        print("Received Sign-Up Data:")
-        print("Username:", username)
-        print("Password:", password)
+    print("Received Sign-Up Data:")
+    print("Username:", username)
+    print("Password:", password)
 
-        if not username or not password:
-            return render_template('signup_result.html', message="Username or password missing")
+    if not username or not password:
+        return render_template('signup_result.html', message="Username or password missing")
         
-        if check_bad_password(password):
-            return render_template('signup_result.html', message=check_bad_password(password))
+    if check_bad_password(password):
+        return render_template('signup_result.html', message=check_bad_password(password))
 
-        db = SessionLocal()
-        existing_user = db.query(Group).filter(Group.groupname == username).first()
-        if existing_user:
-            db.close()
-            return render_template('signup_result.html', message="Username already exists")
-
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        new_user = Group(groupname=username, password=hashed_password)
-        db.add(new_user)
-        db.commit()
+    db = SessionLocal()
+    existing_user = db.query(Group).filter(Group.groupname == username).first()
+    if existing_user:
         db.close()
+        return render_template('signup_result.html', message="Username already exists")
 
-        return render_template('signup_result.html', message="Sign-up successful!")
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    new_user = Group(groupname=username, password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.close()
 
-    return render_template('signup.html')
+    return render_template('signup_result.html', message="Sign-up successful!")
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])
