@@ -1,0 +1,101 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>	
+	<div class="section">
+		<div class="container">
+			<div class="row full-height justify-content-center">
+				<div class="col-12 text-center align-self-center py-5">
+					<div class="section pb-5 pt-5 pt-sm-2 text-center">
+						<h6 class="mb-0 pb-3"><span>Log In </span><span>Sign Up</span></h6>
+			          	<input class="checkbox" type="checkbox" id="reg-log" name="reg-log"/>
+			          	<label for="reg-log"></label>
+						<div class="card-3d-wrap mx-auto">
+							<div class="card-3d-wrapper">
+								<div class="card-front">
+									<div class="center-wrap">
+										<div class="section text-center">
+											<h4 class="mb-4 pb-3">Log In</h4>
+											<form action="/" method="POST">
+												{{ login_form.hidden_tag() }}
+												<!-- group name -->
+												<div class="form-group mt-2">
+													{{ login_form.groupname.label(class="form-label") }}
+													{{ login_form.groupname(
+														class="form-control",
+														id="groupname",
+														placeholder="@group_name",
+														autocomplete="off") }}
+													{% if login_form.groupname.errors %}
+														<div class="invalid-feedback d-block">
+															{% for err in login_form.groupname.errors %}{{ err }}{% endfor %}
+														</div>
+													{% endif %}
+												</div>
+												<!-- password -->
+												<div class="form-group mt-2">
+													{{ login_form.password.label(class="form-label") }}
+													{{ login_form.password(
+														class="form-control",
+														id="password",
+														placeholder="Password",
+														autocomplete="off") }}
+													{% if login_form.password.errors %}
+														<div class="invalid-feedback d-block">
+															{% for err in login_form.password.errors %}{{ err }}{% endfor %}
+														</div>
+													{% endif %}
+												</div>
+												{{ login_form.submit(class="btn btn-primary mt-4") }}
+											</form>
+				      					</div>
+			      					</div>
+			      				</div>
+								<div class="card-back">
+									<div class="center-wrap">
+										<div class="section text-center">
+											<h4 class="mb-4 pb-3">Create a new group</h4>
+											<form action="/signup" method="POST">
+												{{ signup_form.hidden_tag() }}
+												<!-- group name -->
+												<div class="form-group mt-2">
+													{{ signup_form.groupname.label(class="form-label") }}
+													{{ signup_form.groupname(
+														class="form-control",
+														id="groupname",
+														placeholder="@group_name",
+														autocomplete="off") }}
+													{% if signup_form.groupname.errors %}
+														<div class="invalid-feedback d-block">
+															{% for err in signup_form.groupname.errors %}{{ err }}{% endfor %}
+														</div>
+													{% endif %}
+												</div>
+												<!-- password -->
+												<div class="form-group mt-2">
+													{{ signup_form.password.label(class="form-label") }}
+													{{ signup_form.password(
+														class="form-control",
+														id="password",
+														placeholder="Password",
+														autocomplete="off") }}
+													{% if signup_form.password.errors %}
+														<div class="invalid-feedback d-block">
+															{% for err in signup_form.password.errors %}{{ err }}{% endfor %}
+														</div>
+													{% endif %}
+												</div>
+												{{ signup_form.submit(class="btn btn-primary mt-4") }}
+											</form>
+				      					</div>
+			      					</div>
+			      				</div>
+			      			</div>
+			      		</div>
+			      	</div>
+		      	</div>
+	      	</div>
+	    </div>
+	</div>
