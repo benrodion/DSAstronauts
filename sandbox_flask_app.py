@@ -19,32 +19,6 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-"""
-@app.route('/', methods=["GET", "POST"])
-def show_login_page():
-    if request.method == "POST":
-        groupname = request.form.get("loggroupid")
-        password = request.form.get("logpass")
-
-        if not groupname:
-            return render_template('login_result.html', message="Group name missing")
-        elif not password:
-            return render_template('login_result.html', message="Password missing")
-
-        db = SessionLocal()
-        user = db.query(Group).filter(Group.groupname == groupname).first()
-        db.close()
-
-        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            session["groupname"] = groupname
-            session['group_id'] = user.group_id
-            return redirect('/dashboard')
-        else:
-            return render_template('login_result.html', message="Invalid username or password")
-
-    return render_template('login.html')
-"""
-
 @app.route('/', methods=["GET", "POST"])
 def show_login_page():
     login_form = LoginForm()
@@ -104,8 +78,6 @@ def signup():
     return render_template('signup_result.html', message="Sign-up error!")
     # or just show the page again, but then there is no error message:
     # render_template('login_copy.html', signup_form = SignUpForm())
-
-
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
