@@ -19,6 +19,7 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+"""
 @app.route('/', methods=["GET", "POST"])
 def show_login_page():
     if request.method == "POST":
@@ -42,26 +43,52 @@ def show_login_page():
             return render_template('login_result.html', message="Invalid username or password")
 
     return render_template('login.html')
+"""
 
+@app.route('/', methods=["GET", "POST"])
+def show_login_page():
+    login_form = LoginForm()
+
+    if request.method == "POST":
+
+        if login_form.validate_on_submit():
+
+            groupname = login_form.groupname.data
+            password = login_form.password.data
+
+            db = SessionLocal()
+            user = db.query(Group).filter(Group.groupname == groupname).first()
+            db.close()
+
+            if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+                session["groupname"] = groupname
+                session['group_id'] = user.group_id
+                return redirect('/dashboard')
+            
+            else:
+                return render_template('login_result.html', message="Invalid username or password")
+    
+        else:
+            return render_template('login_result.html', message="Login error!")
+
+    return render_template('login_copy.html', login_form = LoginForm(), signup_form = SignUpForm())
 
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
-    if request.method == "POST":
-        username = request.form.get("newloggroupid")
-        password = request.form.get("newlogpass")
+    signup_form = SignUpForm()
+
+    if signup_form.validate_on_submit():
+
+        username = signup_form.groupname.data
+        password = signup_form.password.data
 
         print("Received Sign-Up Data:")
         print("Username:", username)
-        print("Password:", password)
-
-        if not username or not password:
-            return render_template('signup_result.html', message="Username or password missing")
-        
-        if check_bad_password(password):
-            return render_template('signup_result.html', message=check_bad_password(password))
+        print("Password:", password)       
 
         db = SessionLocal()
         existing_user = db.query(Group).filter(Group.groupname == username).first()
+        print(existing_user)
         if existing_user:
             db.close()
             return render_template('signup_result.html', message="Username already exists")
@@ -73,8 +100,11 @@ def signup():
         db.close()
 
         return render_template('signup_result.html', message="Sign-up successful!")
+    
+    return render_template('signup_result.html', message="Sign-up error!")
+    # or just show the page again, but then there is no error message:
+    # render_template('login_copy.html', signup_form = SignUpForm())
 
-    return render_template('signup.html')
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])

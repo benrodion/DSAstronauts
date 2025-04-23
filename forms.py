@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, DecimalField, SelectField, SelectMultipleField, widgets, SubmitField
-from wtforms.validators import InputRequired, NumberRange, Length, DataRequired
+from wtforms import StringField, TextAreaField, DecimalField, SelectField, SelectMultipleField, widgets, SubmitField, PasswordField
+from wtforms.validators import InputRequired, NumberRange, Length, DataRequired, Regexp, ValidationError
+
 
 class AddTransactionForm(FlaskForm):
     transaction_name = StringField(
@@ -39,3 +40,29 @@ class EditTransactionForm(FlaskForm):
 
 class DeleteTransactionForm(FlaskForm):
     submit = SubmitField('Delete')
+
+class SignUpForm(FlaskForm):
+    groupname = StringField(validators=[DataRequired(), Length(min = 4, max = 30, message = "Name should be 1 to 30 characters long")])
+    password = PasswordField(validators=[DataRequired(), Length(min = 4, max = 20, message = "Password should be 4 to 20 characters long")])
+    # Regexp('^\w+$', message = "Password cannot contain spaces")
+    #  confirm password?
+    # password = PasswordField('New Password', [EqualTo('confirm', message='Passwords must match')])
+    # confirm  = PasswordField('Repeat Password')
+    submit = SubmitField("Submit")
+
+    def validate_password(self, password):
+    # Check for whitespaces
+        if ' ' in password.data:
+            raise ValidationError('Password cannot contain whitespaces.')
+
+
+class LoginForm(FlaskForm):
+    groupname = StringField(validators=[DataRequired(), Length(min = 4, max = 30, message = "Name should be 1 to 30 characters long")])
+    password = PasswordField(validators=[DataRequired(), Length(min = 4, max = 20, message = "Password should be 4 to 20 characters long")])
+
+    submit = SubmitField("Submit")
+
+    def validate_password(self, password):
+    # Check for whitespaces
+        if ' ' in password.data:
+            raise ValidationError('Password cannot contain whitespaces.')
