@@ -373,6 +373,9 @@ def calculate_split():
 
     return render_template("split_result.html", result=result, tripname=session["tripname"])
 
+@app.route('/DebtDisplay', methods=['GET', 'POST'])
+def calculate():
+     return render_template('calculate.html')
 
 if __name__ == "__main__":
     print("✅ Starting Flask app...")
