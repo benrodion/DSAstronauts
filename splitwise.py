@@ -18,10 +18,12 @@ class OptimalSplit:
         """
         score = defaultdict(int) # default value of every new key in the score-dict is set to 0 
 
-        #creates score-dict. Keys: names of group members, Values: total amount owed/borrowed
+        #creates score-dict. Keys: names of group members, Values: total amount owed/borrowed.
         for lender, borrower, amount in transactions:
             score[lender] += amount
             score[borrower] -= amount
+
+
          # for us to check what's going on 
         print(score)
 
