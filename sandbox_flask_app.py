@@ -194,8 +194,9 @@ def transactions():
     db.close()
 
 
-    add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + [("other", "Other (Type Name)")]
-    add_tr_form.participants.choices = [(p, p) for p in unique_participants]
+    add_tr_form.payer.choices = sorted([(payer, payer.title()) for payer in unique_payers]) + [("other", "Other (Type Name)")]
+    add_tr_form.participants.choices = sorted([(p, p.title()) for p in unique_participants])
+
 
     session['unique_payers'] = list(unique_payers)
     session['unique_participants'] = list(unique_participants)
@@ -215,15 +216,20 @@ def transactions():
 def add_transaction():
     if "group_id" not in session or "trip_id" not in session:
         return redirect('/')
-        
+
     add_tr_form = AddTransactionForm()
-    
     db = SessionLocal()
     try:
-        # Make sure unique_payers exists in session (even if empty)
+        # Build dictionary for case-insensitive lookups
         unique_payers = session.get('unique_payers', [])
         unique_participants = session.get('unique_participants', [])
-        
+        all_known = unique_payers + unique_participants
+        known_names_dict = {name.lower(): name for name in all_known}  # maps "hanna" -> "Hanna"
+
+        def normalize_name(name):
+            return known_names_dict.get(name.strip().lower(), name.strip())
+
+        # Update form choices
         if unique_payers:
             add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + add_tr_form.payer.choices
         add_tr_form.participants.choices = [(p, p) for p in unique_participants]
@@ -231,55 +237,79 @@ def add_transaction():
         if add_tr_form.validate_on_submit():
             transaction_name = add_tr_form.transaction_name.data
             amount = add_tr_form.amount.data
-            
-            payer = add_tr_form.payer.data
+
+            # Normalize payer input properly
+            payer_input = add_tr_form.payer.data
             payer_custom = add_tr_form.payer_custom.data.strip()
-            
-            if payer == "other" and payer_custom:
-                payer = payer_custom
-            
+
+            if payer_input == "other" and payer_custom:
+                payer = normalize_name(payer_custom)
+            else:
+                payer = normalize_name(payer_input)
+
+            # Normalize participants
             selected_participants = add_tr_form.participants.data
-            new_participants = [p.strip() for p in add_tr_form.participants_names.data.split(",") if p.strip()]
-            participant_names = selected_participants + new_participants
+            new_participants_raw = add_tr_form.participants_names.data.split(",") if add_tr_form.participants_names.data else []
+            new_participants = [normalize_name(p) for p in new_participants_raw if p.strip()]
+            participant_names = [normalize_name(p) for p in selected_participants + new_participants]
 
             if not payer or not participant_names:
                 flash("Please fill in all required fields", "danger")
                 return redirect(url_for('transaction'))
 
+            # Add payer to participants if not already included
             if payer.lower() not in [p.lower() for p in participant_names]:
                 participant_names.append(payer)
 
-            # Create and save the transaction
+            # Deduplicate participants (case-insensitive)
+            seen = set()
+            unique_participant_names = []
+            for name in participant_names:
+                lname = name.lower()
+                if lname not in seen:
+                    seen.add(lname)
+                    unique_participant_names.append(name)
+
+            # Create transaction
             new_transaction = Transaction(
                 tr_name=transaction_name,
                 amount=float(amount),
                 trip_id=session["trip_id"]
             )
             db.add(new_transaction)
-        db.commit()
-        db.refresh(new_transaction)
-        
-        # Add participants
-        for name in participant_names:
-            # Fix the comparison with case-insensitive matching
-            is_payer = (name.strip().lower() == payer.strip().lower())
-            participant = Participant(
-                name=name.strip(), 
-                is_payer=is_payer, 
-                trans_id=new_transaction.trans_id
-            )
-            db.add(participant)
-        
-        db.commit()
-        flash("Transaction added successfully!", "success")
-        
+            db.commit()
+            db.refresh(new_transaction)
+
+            # Add participants
+            for name in unique_participant_names:
+                is_payer = (name.lower() == payer.lower())
+                participant = Participant(
+                    name=name,
+                    is_payer=is_payer,
+                    trans_id=new_transaction.trans_id
+                )
+                db.add(participant)
+
+            db.commit()
+
+            # Update session payer and participant lists
+            existing_payer_names = set(n.lower() for n in session.get("unique_payers", []))
+            if payer.lower() not in existing_payer_names:
+                session["unique_payers"] = session.get("unique_payers", []) + [payer]
+
+            existing_participant_names = set(n.lower() for n in session.get("unique_participants", []))
+            new_unique_participants = [p for p in unique_participant_names if p.lower() not in existing_participant_names]
+            session["unique_participants"] = session.get("unique_participants", []) + new_unique_participants
+
+            flash("Transaction added successfully!", "success")
+
     except Exception as e:
         db.rollback()
         flash(f"Error adding transaction: {str(e)}", "danger")
-        
+
     finally:
         db.close()
-        
+
     return redirect('/transactions')
 
 
