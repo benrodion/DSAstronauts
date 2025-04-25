@@ -20,8 +20,8 @@
                 <tbody>
                     {% for debtor, creditor, amount in result %}                
                     <tr>
-                        <td>{{ debtor }}</td>
-                        <td>{{ creditor }}</td>
+                        <td>{{ debtor|title }}</td>
+                        <td>{{ creditor|title }}</td>
                         <td>{{ '%.2f'|format(amount) }}</td>
                     </tr>
                     {% endfor %}
