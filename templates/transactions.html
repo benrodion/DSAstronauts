@@ -153,9 +153,9 @@
                             {% for transaction in transactions %}
                             <tr>
                                 <td>{{ transaction.name }}</td>
-                                <td>{{ transaction.payer }}</td>
+                                <td>{{ transaction.payer|title }}</td>
                                 <td>${{ "%.2f"|format(transaction.amount) }}</td>
-                                <td>{{ transaction.participants }}</td>
+                                <td>{{ transaction.participants.split(', ') | map('title') | join(', ') }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-warning edit-btn" 
                                             data-id="{{ transaction.id }}"
@@ -194,114 +194,144 @@
         </div>
     </div>
 
-    <!-- Add Transaction Modal -->
-    <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Transaction</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="/transactions/add" method="post">
-                    {{ add_tr_form.hidden_tag() }} 
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            {{ add_tr_form.transaction_name.label(class="form-label") }}
-                            {{ add_tr_form.transaction_name(class="form-control", id="transaction_name") }}
-                            {% if add_tr_form.transaction_name.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in add_tr_form.transaction_name.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            {{ add_tr_form.payer.label(class="form-label") }}
-                            {{ add_tr_form.payer(class="form-select", id="payer", onchange="togglePayerInput()") }}
-                            {% if add_tr_form.payer.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in add_tr_form.payer.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            
-                            {{ add_tr_form.payer_custom(class="form-control mt-2", id="payerInput", placeholder="Enter payer name", style="display: none;") }}
-                
-                            <script>
-                                function togglePayerInput() {
-                                    var select = document.getElementById("payer");
-                                    var input = document.getElementById("payerInput");
-
-                                    if (select.value === "other") {
-                                        input.style.display = "block";
-                                        input.required = true; 
-                                    } else {
-                                        input.style.display = "none";
-                                        input.required = false; 
-                                        input.value = ""; 
-                                    }
-                                }
-
-                                window.onload = togglePayerInput;
-                            </script>
-                        </div>
-                        <div class="mb-3">
-                            {{ add_tr_form.amount.label(class="form-label") }}
-                            {{ add_tr_form.amount(class="form-control", step="0.01", id="amount") }}
-                            {% if add_tr_form.amount.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in add_tr_form.amount.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Participants</label>
-                            <div>
-                                {{ add_tr_form.participants(class="form-select", id="participantsSelect", multiple="multiple") }}
-                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple participants</small>
-                            </div>
-                            
-                            <h6 class="mt-2 text-center">OR</h6>
-                            
-                            {{ add_tr_form.participants_names(class="form-control mt-2", id="participantsInput", placeholder="Enter participant names, separated by commas") }}
-                            
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function () {
-                                    const participantsSelect = document.getElementById("participantsSelect");
-                                    const participantsInput = document.getElementById("participantsInput");
-                            
-                                    participantsSelect.addEventListener("change", function () {
-                                        if (this.selectedOptions.length > 0) {
-                                            participantsInput.dataset.isEmpty = "true";
-                                        } else {
-                                            participantsInput.dataset.isEmpty = "false";
-                                        }
-                                    });
-                            
-                                    participantsInput.addEventListener("input", function () {
-                                        if (this.value.trim() !== "") {
-                                            participantsSelect.dataset.isEmpty = "true";
-                                        } else {
-                                            participantsSelect.dataset.isEmpty = "false";
-                                        }
-                                    });
-                                });
-                            </script>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Add Transaction</button>
-                    </div>
-                </form>
+ <!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form action="/transactions/add" method="post">
+                {{ add_tr_form.hidden_tag() }} 
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ add_tr_form.transaction_name.label(class="form-label") }}
+                        {{ add_tr_form.transaction_name(class="form-control", id="transaction_name") }}
+                        {% if add_tr_form.transaction_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in add_tr_form.transaction_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ add_tr_form.payer.label(class="form-label") }}
+                        {{ add_tr_form.payer(class="form-select", id="payer", onchange="togglePayerInput()") }}
+                        {% if add_tr_form.payer.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in add_tr_form.payer.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {{ add_tr_form.payer_custom(class="form-control mt-2", id="payerInput", placeholder="Enter payer name", style="display: none;") }}
+                        <!-- Info about payer -->
+                        <small class="form-text text-muted mt-2">
+                            Note: The payer is automatically added as a participant.
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        {{ add_tr_form.amount.label(class="form-label") }}
+                        {{ add_tr_form.amount(class="form-control", step="0.01", id="amount") }}
+                        {% if add_tr_form.amount.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in add_tr_form.amount.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Participants</label>
+                        <small class="form-text text-muted d-block">
+                            You can select existing participants or add new ones below.
+                        </small>
+                        {{ add_tr_form.participants(class="form-select mb-2", id="participantsSelect", multiple="multiple") }}
+                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple participants.</small>
+
+                        <h6 class="mt-3 text-center">OR add new participant:</h6>
+                        <div class="input-group mb-2">
+                            <input type="text" id="newParticipant" class="form-control" placeholder="Enter name and hit + to add" aria-label="New participant name">
+                            <button type="button" class="btn btn-outline-secondary" onclick="addParticipant()">+</button>
+                        </div>
+                        <ul id="participantList" class="list-group mb-3"></ul>
+                        <input type="hidden" name="participants_names" id="participantsInput">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Add Transaction</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
+<script>
+    let participantSet = new Set();
+
+    function normalizeName(name) {
+        return name.trim().toLowerCase();
+    }
+
+    function getCanonicalName(name, knownNames) {
+        const lower = name.toLowerCase();
+        for (let known of knownNames) {
+            if (known.toLowerCase() === lower) return known;
+        }
+        return name;
+    }
+
+    function togglePayerInput() {
+        const select = document.getElementById("payer");
+        const input = document.getElementById("payerInput");
+
+        if (select.value === "other") {
+            input.style.display = "block";
+            input.required = true;
+        } else {
+            input.style.display = "none";
+            input.required = false;
+            input.value = "";
+        }
+    }
+
+    window.onload = togglePayerInput;
+
+    function addParticipant() {
+        const input = document.getElementById("newParticipant");
+        const name = input.value.trim();
+        const nameLower = normalizeName(name);
+        const list = document.getElementById("participantList");
+        const dropdown = document.getElementById("participantsSelect");
+        const hidden = document.getElementById("participantsInput");
+
+        if (!name) return;
+
+        const selectedFromDropdown = Array.from(dropdown.options).map(opt => normalizeName(opt.value));
+        const allNames = new Set([...selectedFromDropdown, ...participantSet]);
+
+        if (allNames.has(nameLower)) {
+            alert("This name already exists (maybe with different casing). Use a nickname if it's a different person.");
+            return;
+        }
+
+        // Add to hidden input
+        hidden.value += (hidden.value ? "," : "") + name;
+
+        // Add to visual list
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.className = "list-group-item";
+        list.appendChild(li);
+
+        participantSet.add(nameLower);
+        input.value = "";
+    }
+</script>
 
     <!-- Edit Transaction Modal -->
     <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-hidden="true">
