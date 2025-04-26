@@ -45,13 +45,13 @@
 
     /* Table styling */
     .pink-table {
-        border: 3px solid hotpink; 
+        border: 3px solid #c04154; 
         width: 100%;
         font-family: 'Open Sans';
     }
 
     .pink-table th, .pink-table td {
-        border: 2px solid hotpink; 
+        border: 2px solid #c04154; 
         padding: 10px;
         text-align: center;
         font-family: 'Open Sans';
@@ -86,14 +86,14 @@
             max-height: 56px; /* Standard Bootstrap height */
         }
         .navbar-brand, .nav-link {
-            color: hotpink !important;
+            color: #c04154 !important;
             font-family: 'Open Sans';
             font-weight: 600;
         }
         .navbar-brand-text{
           text-transform: uppercase;
           font-weight: 700;
-          color: hotpink !important;
+          color: #c04154 !important;
           font-family: 'Open Sans';
         }
         .nav-link:hover {
@@ -147,7 +147,7 @@
             background-color: white;
             color: black;
             font-weight: normal;
-            border: 1px solid hotpink;
+            border: 1px solid #c04154;
             padding: 8px;
         }
         .select{
@@ -159,7 +159,7 @@
         /* Euro Sign shimmer effect */
     .euro-sign {
         font-size: 48px;
-        color: hotpink;
+        color: #c04154;
         font-weight: bold;
         position: absolute;
         top: 50%;
@@ -203,72 +203,79 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-file-invoice-dollar"></span>Overview of Expenses</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-landmark"></span>Old Trips</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard#previous-trips"><span class="fa-solid fa-landmark"></span> Old Trips</a></li>                  
                 <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
-            </ul>
+               </ul>
             <ul class="navbar-nav navbar-right">
-              <li class ="nav-item"></li><a class = "nav-link" href="#"><span class="fas fa-door-open pe-2"></span>Login</a></li>
+                <li class ="nav-item"></li><a class = "nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Back to login</a></li>
             </ul>
         </div>
     </div>
 </nav>
-<!-- Page background and broader center block -->
-<body>
-    <div class="container d-flex justify-content-center mt-5">
-        <div class="euro-sign euro-left" style="top: 30%; animation-delay: 0s;">€</div>
-        <div class="euro-sign euro-left" style="top: 50%; animation-delay: 0.5s;">€</div>
-        <div class="euro-sign euro-left" style="top: 70%; animation-delay: 1s;">€</div>
-        <div class="euro-sign euro-right" style="top: 30%; animation-delay: 0s;">€</div>
-        <div class="euro-sign euro-right" style="top: 50%; animation-delay: 0.5s;">€</div>
-        <div class="euro-sign euro-right" style="top: 70%; animation-delay: 1s;">€</div>
-        <div class="block center-block" style="max-width: 1100px; width: 100%;">
-            
-    
-            <!-- Pink Border Table Block -->
-            <div class="below-block">
-                <h4 class="text-center mb-4 navbar-brand-text">Debt Table</h4>
+
+<!-- Background decorations with euro signs -->
+<div class="container d-flex justify-content-center mt-5">
+    <div class="euro-sign euro-left" style="top: 30%; animation-delay: 0s;">€</div>
+    <div class="euro-sign euro-left" style="top: 50%; animation-delay: 0.5s;">€</div>
+    <div class="euro-sign euro-left" style="top: 70%; animation-delay: 1s;">€</div>
+    <div class="euro-sign euro-right" style="top: 30%; animation-delay: 0s;">€</div>
+    <div class="euro-sign euro-right" style="top: 50%; animation-delay: 0.5s;">€</div>
+    <div class="euro-sign euro-right" style="top: 70%; animation-delay: 1s;">€</div>
+
+    <!-- Main content block -->
+    <div class="block center-block" style="max-width: 1100px; width: 100%;">
+        
+        <!-- Debt Table -->
+        <div class="below-block">
+            <h4 class="text-center mb-4 navbar-brand-text">Who Owes Whom – {{ tripname }}</h4>
+
+            {% if result %}
                 <div class="table-responsive">
                     <table class="pink-table">
                         <thead>
                             <tr>
                                 <th>Debtor</th>
                                 <th>Creditor</th>
-                                <th>Amount</th>
+                                <th>Amount (€)</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for debtor, creditor, amount in result %}                
                             <tr>
-                                <td>Jessie</td>
-                                <td>€120</td>
-                                <td>April 30</td>
+                                <td>{{ debtor|title }}</td>
+                                <td>{{ creditor|title }}</td>
+                                <td>{{ '%.2f'|format(amount) }}</td>
                             </tr>
-                            <tr>
-                                <td>Sam</td>
-                                <td>€85</td>
-                                <td>May 5</td>
-                            </tr>
-                            <tr>
-                                <td>Lola</td>
-                                <td>€45</td>
-                                <td>May 12</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
-    
-            <!-- Three Pictures Block -->
-            <div class="below-block mt-5">
-                <h4 class="text-center mb-4 navbar-brand-text">Trip Moodboard</h4>
-                <div class="three-pictures">
-                    <img src="{{ url_for('static', filename='trixie.jpeg') }}" alt="Sunset">
-                    <img src="{{ url_for('static', filename='GBH.jpeg') }}" alt="Shopping">
-                    <img src="{{ url_for('static', filename='barbie.jpeg') }}" alt="Spa">
-                </div>
+            {% else %}
+                <div class="alert alert-info text-center">No debts to settle – everyone's even!</div>
+            {% endif %}
+
+            <div class="bottom-center">
+                <a href="/transactions" class="btn btn-secondary shimmer-button mt-4">
+                    ← Back to Transactions
+                </a>
             </div>
         </div>
+
+        <!-- Moodboard -->
+        <div class="below-block mt-5">
+            <h4 class="text-center mb-4 navbar-brand-text">Trip Moodboard</h4>
+            <div class="three-pictures">
+                <img src="{{ url_for('static', filename='trixie.jpeg') }}" alt="Sunset">
+                <img src="{{ url_for('static', filename='GBH.jpeg') }}" alt="Shopping">
+                <img src="{{ url_for('static', filename='barbie.jpeg') }}" alt="Spa">
+            </div>
+        </div>
+
     </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

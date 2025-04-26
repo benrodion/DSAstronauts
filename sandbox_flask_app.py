@@ -82,9 +82,6 @@ def dashboard():
         return jsonify({'message': 'Unauthorized'}), 401
 
     trip_form = TripForm()
-    add_tr_form = AddTransactionForm()
-    edit_tr_form = EditTransactionForm()
-    delete_tr_form = DeleteTransactionForm()
     db = SessionLocal()
 
     previous_trips = db.query(Trip).filter(Trip.group_id == session['group_id']).all()
@@ -106,22 +103,18 @@ def dashboard():
                                    message="Trip already exists. Please use another name.")
 
         # Create a new trip
-        session["trip_type"] = selected_type
-        session["tripname"] = tripname
-
         new_trip = Trip(tripname=tripname, triptype=selected_type, group_id=session["group_id"])
         db.add(new_trip)
         db.commit()
         db.refresh(new_trip)
-        session["trip_id"] = new_trip.trip_id
-        db.close()
 
-        return render_template('transactions.html', tripname=new_trip.tripname,
-                                trip_id=new_trip.trip_id,
-                                add_tr_form=add_tr_form,
-                                edit_tr_form=edit_tr_form,
-                                delete_tr_form=delete_tr_form)
-    
+        # Set session variables
+        session["trip_id"] = new_trip.trip_id
+        session["tripname"] = new_trip.tripname
+
+        db.close()
+        return redirect('/transactions')
+
     db.close()
     return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
 
@@ -134,43 +127,38 @@ def transactions():
             session['trip_id'] = trip_id
 
     if "trip_id" not in session:
-        return redirect('/')
+        flash("No trip selected. Please select a trip first.", "warning")
+        return redirect('/dashboard')
 
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
 
     current_trip_id = session["trip_id"]
     db = SessionLocal()
-    add_tr_form = AddTransactionForm()
-    edit_tr_form = EditTransactionForm()
-    delete_tr_form = DeleteTransactionForm()
-    
-    # Retrieve only transactions related to the current trip
-    transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
+
+    # Retrieve tripname and set it in the session
     tripname = db.query(Trip).filter(Trip.trip_id == current_trip_id).first().tripname
-    
-    # Get all participants for the forms (filtered by group)
-    participants =(
+    session["tripname"] = tripname
+
+    # Retrieve transactions and participants
+    transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
+    participants = (
         db.query(distinct(Participant.name))
         .join(Transaction, Participant.trans_id == Transaction.trans_id)
         .join(Trip, Transaction.trip_id == Trip.trip_id)
         .filter(Trip.group_id == session["group_id"])
         .all()
     )
-    
+
     # Format transactions data for the template
     transactions_data = []
     unique_participants = set()
-    unique_payers = set()  # Optional: collect unique payers too
+    unique_payers = set()
 
     for transaction in transactions:
-        # Extract all participant names
         participant_names = [p.name for p in transaction.participants]
-
-        # Add to unique participants
         unique_participants.update(participant_names)
 
-        # Identify payer for this transaction
         payers = [p.name for p in transaction.participants if p.is_payer]
         if payers:
             unique_payers.update(payers)
@@ -188,23 +176,18 @@ def transactions():
 
     db.close()
 
-
-    add_tr_form.payer.choices = sorted([(payer, payer.title()) for payer in unique_payers]) + [("other", "Other (Type Name)")]
-    add_tr_form.participants.choices = sorted([(p, p.title()) for p in unique_participants])
-
-
+    # Update session variables
     session['unique_payers'] = list(unique_payers)
     session['unique_participants'] = list(unique_participants)
 
-
     return render_template("transactions.html", 
-                        transactions=transactions_data, 
-                        unique_payers=list(unique_payers),
-                        unique_participants=list(unique_participants),
-                        tripname=tripname,
-                        add_tr_form=add_tr_form,
-                        edit_tr_form=edit_tr_form,
-                        delete_tr_form=delete_tr_form)
+                           transactions=transactions_data, 
+                           unique_payers=list(unique_payers),
+                           unique_participants=list(unique_participants),
+                           tripname=tripname,
+                           add_tr_form=AddTransactionForm(),
+                           edit_tr_form=EditTransactionForm(),
+                           delete_tr_form=DeleteTransactionForm())
 
 
 @app.route('/transactions/add', methods=["POST"])
@@ -533,18 +516,34 @@ def delete_transaction(id):
 
 @app.route('/calculate_split')
 def calculate_split():
-    if "trip_id" not in session or "tripname" not in session:
+    # Check if trip_id and tripname are in the session
+    trip_id = session.get("trip_id")
+    tripname = session.get("tripname")
+
+    # If not in session, try to retrieve from query parameters
+    if not trip_id or not tripname:
+        trip_id = request.args.get("trip_id")
+        tripname = request.args.get("tripname")
+
+    # If still missing, redirect to the dashboard
+    if not trip_id or not tripname:
+        flash("No trip selected. Please select a trip first.", "warning")
         return redirect('/dashboard')
-    trip_id = int(session["trip_id"])
+
+    # Convert trip_id to integer
+    try:
+        trip_id = int(trip_id)
+    except ValueError:
+        flash("Invalid trip ID.", "danger")
+        return redirect('/dashboard')
+
+    # Prepare transactions for the split
     transactions = prepare_transactions_for_split(trip_id)
     splitter = OptimalSplit()
     result = splitter.minTransfers(transactions)
 
-    return render_template("split_result.html", result=result, tripname=session["tripname"])
+    return render_template("calculate.html", result=result, tripname=tripname)
 
-@app.route('/DebtDisplay', methods=['GET', 'POST'])
-def calculate():
-     return render_template('calculate.html')
 
 if __name__ == "__main__":
     print("✅ Starting Flask app...")
