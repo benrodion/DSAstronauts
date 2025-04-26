@@ -16,7 +16,7 @@
     <!-- FontAwesome -->
     <script src="https://kit.fontawesome.com/aabba25cda.js" crossorigin="anonymous"></script>
 
-    <title>Styled Page with Navbar</title>
+    <title>Trips</title>
 
     <style>
         /* Make Navbar Follow styles.css Theme */
@@ -95,6 +95,7 @@
             font-family: 'Font Awesome 5 Free' , 'arial'
         }
         .trip-list {
+            max-width: 350px;
             list-style: none;
             padding: 0;
             margin: 0;
@@ -110,14 +111,18 @@
 
         .trip-form {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            width: 100%; 
         }
 
         .trip-label {
             color: #c04154;
             font-weight: 600;
-            margin-right: 20px;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            flex-grow: 1;
         }
 
         .trip-button {
@@ -130,11 +135,22 @@
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            flex-shrink: 0;
         }
 
         .trip-button:hover {
             background-color: #c04154;
             color: white;
+        }
+
+
+        .form-style::placeholder {
+            line-height: normal;
+        }
+
+        .form-container {
+          max-width: 300px;
+          margin: 0 auto;
         }
 
     </style>
@@ -177,60 +193,71 @@
       class = "image"/>
     </div>
     <div class="block center-block">
-      <h6 class="mb-0 pb-3"> <span>Create a trip by selecting an option or inputing your own description</span></h6> 
-      <div class ="inner-block">
-        <form method="post">
-        <label for="tripSelection" class="form-label navbar-brand-text">Pick a Trip</label>
-        <select id="tripSelection" name = "tripSelection" class="selectpicker form-select" data-show-icon="true">
-          <option value="" selected>Choose...</option>
-          <option value="beach"> <i class="bi bi-0-square"></i>Beach Trip </option>
-          <option value="dinner" data-icon="fa-utensils">Dinner</option>
-          <option value="skiing" data-icon="fa-skiing">Skiing Trip</option>
-          <option value="museum" data-icon="fa-landmark">Museum Trip</option>
-          <option value="film" data-icon="fa-film">Movies</option>
-          <option value="other" data-icon="fa-question-circle">Other</option>
-        </select>
-      <br>
-        <h6 class="navbar-brand"> <span>OR</span></h6>
-      <br>
-      <h6 class="navbar-brand"> <span>Enter Trip Name</span></h6>
-        <div class="form-group mt-2">
-          <input type="text" name="yourtripname" class="form-style" placeholder="Your Trip Name" id="yourtripname" autocomplete="off">
-          <i class="material-icons">groups</i>
-        </div>	
-      <br>
-      <div class="d-flex justify-content-center">
-        <button type="submit" class="btn btn-danger">Create Trip</button>
-      </div>
-        </form>
-      <br>
-      {% if previous_trips %}
-  <h2>Previous Trips</h2>
-  <ul class="trip-list">
-    {% for trip in previous_trips %}
-      <li class="trip-item">
-        <form method="post" action="{{ url_for('transactions') }}" class="trip-form">
-          <input type="hidden" name="trip_id" value="{{ trip.trip_id }}">
-          <span class="trip-label">
-            {{ trip.tripname }} <small>({{ trip.triptype }})</small>
-          </span>
-          <button type="submit" class="trip-button">View</button>
-        </form>
-      </li>
-    {% endfor %}
-  </ul>
-  
+      <h6 class="mb-0 pb-3"> <span>Create a trip by selecting a trip type and inputting a trip name</span></h6> 
     
-{% else %}
-  <p>No previous trips yet.</p>
-{% endif %}
-        <br>
-        <br>
-        <br>
-        <br>
+      <div class="inner-block">
+    
+        <form method="post" class="w-75">
+          {{ trip_form.hidden_tag() }}
+          
+          <div class="form-container">
+            <div class="mb-2">
+              <h6 class="navbar-brand"><span>Pick a Trip Type</span></h6>
+              {{ trip_form.tripSelection(class="form-select selectpicker form-select-sm", id="tripSelection") }}
+              {% if trip_form.tripSelection.errors %}
+                <div class="text-danger small">{{ trip_form.tripSelection.errors[0] }}</div>
+              {% endif %}
+            </div>
+          </div>
+    
+          <div class="text-center mb-3">
+            <h6 class="navbar-brand"><span>AND</span></h6>
+          </div>
+    
+          <div class="mb-3">
+            <h6 class="navbar-brand"><span>Enter Trip Name</span></h6>
+            <div class="form-group mt-2 position-relative">
+              {{ trip_form.yourtripname(class="form-control form-style ps-5", id="yourtripname", placeholder="Your Trip Name", autocomplete="off") }}
+              <i class="material-icons position-absolute" style="top:50%; right:10px; transform:translateY(-50%); pointer-events: none;">groups</i>
+            </div>
+            {% if trip_form.yourtripname.errors %}
+              <div class="text-danger small">{{ trip_form.yourtripname.errors[0] }}</div>
+            {% endif %}
+          </div>
+    
+          <div class="d-flex justify-content-center">
+            {{ trip_form.submit(class="btn btn-danger") }}
+          </div>
+        </form>
+    
+        <br><br>
+    
+        {% if previous_trips %}
+        <h2 id="previous-trips" class="text-center mt-4">Previous Trips</h2>
+          <ul class="trip-list w-100">
+            {% for trip in previous_trips %}
+              <li class="trip-item">
+                <form method="post" action="{{ url_for('transactions') }}" class="trip-form">
+                  <input type="hidden" name="trip_id" value="{{ trip.trip_id }}">
+                  <span class="trip-label">
+                    {{ trip.tripname }} <small>({{ trip.triptype }})</small>
+                  </span>
+                  <button type="submit" class="trip-button">View</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-center mt-4">No previous trips yet.</p>
+        {% endif %}
+    
+        <br><br><br><br>
+    
+        <img class="imageBig" src="{{ url_for('static', filename='meangirls.jpg.webp') }}"/>
+        
+      </div>
     </div>
-      <img class = "imageBig" src="{{url_for('static', filename='meangirls.jpg.webp')}}"/>
-  </div> 
+    
     <div class="block">
       <h6 class = "mb-0 pb-3"> <span>Or maybe something like this?</span></h6>
       <img src="{{url_for('static', filename='Winx_Club.jpg')}}"

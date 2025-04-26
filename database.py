@@ -35,7 +35,7 @@ class Transaction(Base):
     __tablename__ = 'transactions'
     trans_id = Column(Integer, primary_key=True, index = True, autoincrement=True)
     tr_name = Column(String)
-    amount = Column(BigInteger)
+    amount = Column(Float)
     trip_id = Column(BigInteger, ForeignKey('trips.trip_id'))
 
     trip = relationship("Trip", back_populates="transactions")
