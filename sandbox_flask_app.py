@@ -46,92 +46,84 @@ def show_login_page():
     return render_template('login.html')
 
 
-@app.route('/signup', methods=["GET", "POST"])
+@app.route('/signup', methods=["POST"])
 def signup():
-    if request.method == "POST":
-        username = request.form.get("newloggroupid")
-        password = request.form.get("newlogpass")
+    username = request.form.get("newloggroupid")
+    password = request.form.get("newlogpass")
 
-        print("Received Sign-Up Data:")
-        print("Username:", username)
-        print("Password:", password)
+    print("Received Sign-Up Data:")
+    print("Username:", username)
+    print("Password:", password)
 
-        if not username or not password:
-            return render_template('signup_result.html', message="Username or password missing")
+    if not username or not password:
+        return render_template('signup_result.html', message="Username or password missing")
         
-        if check_bad_password(password):
-            return render_template('signup_result.html', message=check_bad_password(password))
+    if check_bad_password(password):
+        return render_template('signup_result.html', message=check_bad_password(password))
 
-        db = SessionLocal()
-        existing_user = db.query(Group).filter(Group.groupname == username).first()
-        if existing_user:
-            db.close()
-            return render_template('signup_result.html', message="Username already exists")
-
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        new_user = Group(groupname=username, password=hashed_password)
-        db.add(new_user)
-        db.commit()
+    db = SessionLocal()
+    existing_user = db.query(Group).filter(Group.groupname == username).first()
+    if existing_user:
         db.close()
+        return render_template('signup_result.html', message="Username already exists")
 
-        return render_template('signup_result.html', message="Sign-up successful!")
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    new_user = Group(groupname=username, password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.close()
 
-    return render_template('signup.html')
+    return render_template('signup_result.html', message="Sign-up successful!")
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
+
+    trip_form = TripForm()
     add_tr_form = AddTransactionForm()
     edit_tr_form = EditTransactionForm()
     delete_tr_form = DeleteTransactionForm()
     db = SessionLocal()
-    # Fetch previous trips for the group
+
     previous_trips = db.query(Trip).filter(Trip.group_id == session['group_id']).all()
-    
-    if request.method == 'POST':
-        # Get form values
-        selected_type = request.form.get("tripSelection", "")
-        tripname = request.form.get("yourtripname", "")
-        
-        # Validation
-        if selected_type not in ['beach', 'dinner', 'skiing', 'museum', 'film', 'other']:
-            db.close()
-            return render_template('login_result.html', 
-                                  message="Trip selection missing")
-                                  
-        if not tripname:
-            db.close()
-            return render_template('login_result.html', 
-                                  message="Trip name missing")
-        
-        # Check if trip exists
-        existing_trip = db.query(Trip).filter(Trip.tripname == tripname, Trip.group_id == session['group_id']).first()
+
+    if trip_form.validate_on_submit():
+        selected_type = trip_form.tripSelection.data
+        tripname = trip_form.yourtripname.data.strip()
+
+        # Check if trip already exists
+        existing_trip = db.query(Trip).filter(
+            Trip.tripname == tripname, 
+            Trip.group_id == session['group_id']
+        ).first()
+
         if existing_trip:
             db.close()
-            return render_template('dashboard.html', 
-                                  message="Trip already exists. Please use another name")
-        
-        # Create new trip
+            return render_template('dashboard.html', previous_trips=previous_trips,
+                                   trip_form=trip_form,
+                                   message="Trip already exists. Please use another name.")
+
+        # Create a new trip
         session["trip_type"] = selected_type
         session["tripname"] = tripname
-        
+
         new_trip = Trip(tripname=tripname, triptype=selected_type, group_id=session["group_id"])
         db.add(new_trip)
         db.commit()
         db.refresh(new_trip)
         session["trip_id"] = new_trip.trip_id
         db.close()
-        
+
         return render_template('transactions.html', tripname=new_trip.tripname,
-                                trip_id=new_trip.trip_id, 
+                                trip_id=new_trip.trip_id,
                                 add_tr_form=add_tr_form,
                                 edit_tr_form=edit_tr_form,
                                 delete_tr_form=delete_tr_form)
-   
+    
     db.close()
-    return render_template('dashboard.html', previous_trips=previous_trips)
+    return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
 
 
 @app.route('/transactions', methods=['GET', 'POST'])
@@ -153,7 +145,7 @@ def transactions():
     edit_tr_form = EditTransactionForm()
     delete_tr_form = DeleteTransactionForm()
     
-    # Retrieve only transactions related to the user's group_id
+    # Retrieve only transactions related to the current trip
     transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
     tripname = db.query(Trip).filter(Trip.trip_id == current_trip_id).first().tripname
     
@@ -178,7 +170,7 @@ def transactions():
         # Add to unique participants
         unique_participants.update(participant_names)
 
-        # Identify payer(s) for this transaction
+        # Identify payer for this transaction
         payers = [p.name for p in transaction.participants if p.is_payer]
         if payers:
             unique_payers.update(payers)
@@ -197,8 +189,9 @@ def transactions():
     db.close()
 
 
-    add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + [("other", "Other (Type Name)")]
-    add_tr_form.participants.choices = [(p, p) for p in unique_participants]
+    add_tr_form.payer.choices = sorted([(payer, payer.title()) for payer in unique_payers]) + [("other", "Other (Type Name)")]
+    add_tr_form.participants.choices = sorted([(p, p.title()) for p in unique_participants])
+
 
     session['unique_payers'] = list(unique_payers)
     session['unique_participants'] = list(unique_participants)
@@ -216,66 +209,108 @@ def transactions():
 
 @app.route('/transactions/add', methods=["POST"])
 def add_transaction():
+    """Add a new transaction to the current trip."""
+    # Check if required session variables exist
     if "group_id" not in session or "trip_id" not in session:
+        flash("No active trip selected", "warning")
         return redirect('/')
-        
+
     add_tr_form = AddTransactionForm()
-    
     db = SessionLocal()
     try:
-        # Make sure unique_payers exists in session (even if empty)
+        # Get unique names from session for case-insensitive lookups
         unique_payers = session.get('unique_payers', [])
         unique_participants = session.get('unique_participants', [])
         
+        # Create a case-insensitive lookup dictionary
+        all_known_names = unique_payers + unique_participants
+        name_lookup = {name.lower(): name for name in all_known_names}
+        
+        # Helper function to normalize names based on existing known names
+        def normalize_name(name):
+            """Return canonical version of name if it exists, otherwise the cleaned input name."""
+            return name_lookup.get(name.strip().lower(), name.strip())
+        
+        # Update form choices with existing data
         if unique_payers:
             add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + add_tr_form.payer.choices
-        add_tr_form.participants.choices = [(p, p) for p in unique_participants]
-
+        
+        if unique_participants:
+            add_tr_form.participants.choices = [(p, p) for p in unique_participants]
+        
         if add_tr_form.validate_on_submit():
+            # Get basic transaction data
             transaction_name = add_tr_form.transaction_name.data
             amount = add_tr_form.amount.data
             
-            payer = add_tr_form.payer.data
-            payer_custom = add_tr_form.payer_custom.data.strip()
+            # Process payer information
+            if add_tr_form.payer.data == "other" and add_tr_form.payer_custom.data.strip():
+                payer = normalize_name(add_tr_form.payer_custom.data)
+            else:
+                payer = normalize_name(add_tr_form.payer.data)
+                
+            # Process participants information
+            selected_participants = [normalize_name(p) for p in add_tr_form.participants.data]
             
-            if payer == "other" and payer_custom:
-                payer = payer_custom
+            # Handle new participants added via JavaScript
+            new_participants = []
+            if add_tr_form.participants_names.data:
+                new_participants_raw = add_tr_form.participants_names.data.split(",")
+                new_participants = [normalize_name(p) for p in new_participants_raw if p.strip()]
             
-            selected_participants = add_tr_form.participants.data
-            new_participants = [p.strip() for p in add_tr_form.participants_names.data.split(",") if p.strip()]
-            participant_names = selected_participants + new_participants
-
-            if not payer or not participant_names:
-                flash("Please fill in all required fields", "danger")
-                return redirect(url_for('transaction'))
-
-            if payer.lower() not in [p.lower() for p in participant_names]:
-                participant_names.append(payer)
-
-            # Create and save the transaction
+            # Combine all participants
+            all_participants = selected_participants + new_participants
+            
+            # Validation
+            if not payer or not all_participants:
+                flash("Please provide a payer and at least one participant", "danger")
+                return redirect('/transactions')
+                
+            # Make sure payer is included in participants list
+            if not any(p.lower() == payer.lower() for p in all_participants):
+                all_participants.append(payer)
+                
+            # Remove duplicates while preserving case from known names
+            unique_participants_set = set()
+            final_participants = []
+            
+            for name in all_participants:
+                name_lower = name.lower()
+                if name_lower not in unique_participants_set:
+                    unique_participants_set.add(name_lower)
+                    final_participants.append(name)
+            
+            # Create the transaction record
             new_transaction = Transaction(
                 tr_name=transaction_name,
                 amount=float(amount),
                 trip_id=session["trip_id"]
             )
             db.add(new_transaction)
-        db.commit()
-        db.refresh(new_transaction)
+            db.flush()  # Get the ID without committing
+            
+            # Add all participants to the transaction
+            for name in final_participants:
+                participant = Participant(
+                    name=name,
+                    is_payer=(name.lower() == payer.lower()),
+                    trans_id=new_transaction.trans_id
+                )
+                db.add(participant)
+                
+            # Commit all changes
+            db.commit()
+            
+            # Update session with new unique names for future use
+            update_session_names(payer, final_participants)
+            
+            flash("Transaction added successfully!", "success")
+            return redirect('/transactions')
         
-        # Add participants
-        for name in participant_names:
-            # Fix the comparison with case-insensitive matching
-            is_payer = (name.strip().lower() == payer.strip().lower())
-            participant = Participant(
-                name=name.strip(), 
-                is_payer=is_payer, 
-                trans_id=new_transaction.trans_id
-            )
-            db.add(participant)
-        
-        db.commit()
-        flash("Transaction added successfully!", "success")
-        
+        else:
+            print("Form did not validate")
+            print(add_tr_form.errors)
+            
     except Exception as e:
         db.rollback()
         flash(f"Error adding transaction: {str(e)}", "danger")
@@ -285,53 +320,187 @@ def add_transaction():
         
     return redirect('/transactions')
 
+def update_session_names(payer, participants):
+    """Update session with new unique names."""
+    # Update payers list
+    existing_payers = {p.lower() for p in session.get("unique_payers", [])}
+    if payer.lower() not in existing_payers:
+        session["unique_payers"] = session.get("unique_payers", []) + [payer]
+        
+    # Update participants list
+    existing_participants = {p.lower() for p in session.get("unique_participants", [])}
+    new_participants = []
+    
+    for participant in participants:
+        if participant.lower() not in existing_participants:
+            new_participants.append(participant)
+            existing_participants.add(participant.lower())
+            
+    if new_participants:
+        session["unique_participants"] = session.get("unique_participants", []) + new_participants
 
-@app.route('/transactions/edit/<int:id>', methods=["POST"])
+
+
+@app.route('/transactions/edit/<int:id>', methods=["GET", "POST"])
 def edit_transaction(id):
-    if "group_id" not in session:
+    """Edit an existing transaction."""
+    if "group_id" not in session or "trip_id" not in session:
+        flash("No active trip selected", "warning")
         return redirect('/')
 
     db = SessionLocal()
-    transaction = db.query(Transaction).filter(Transaction.trans_id == id).first()
-    edit_tr_form = EditTransactionForm()
+    try:
+        transaction = db.query(Transaction).filter_by(trans_id=id).first()
+        if not transaction:
+            flash("Transaction not found!", "danger")
+            return redirect('/transactions')
 
-    if not transaction:
-        db.close()
-        flash("Transaction not found!", "error")
+        participants = db.query(Participant).filter_by(trans_id=transaction.trans_id).all()
+        payer_name = next((p.name for p in participants if p.is_payer), None)
+        participant_names = [p.name for p in participants]
+
+        edit_tr_form = EditTransactionForm()
+
+        # Prepare session names
+        unique_payers = session.get('unique_payers', [])
+        unique_participants = session.get('unique_participants', [])
+        name_lookup = {name.lower(): name for name in unique_payers + unique_participants}
+
+        def normalize_name(name):
+            return name_lookup.get(name.strip().lower(), name.strip())
+
+        # Update form choices dynamically based on session + database
+        db_payers = [payer_name] if payer_name else []
+        db_participants = participant_names
+
+        unique_payers = session.get('unique_payers', [])
+        unique_participants = session.get('unique_participants', [])
+
+        all_payers = set(unique_payers + db_payers)
+        all_participants = set(unique_participants + db_participants)
+
+        edit_tr_form.payer.choices = [(payer, payer) for payer in all_payers if payer] + [("other", "Other (Type Name)")]
+        edit_tr_form.participants.choices = [(p, p) for p in all_participants if p]
+
+
+        # Handle AJAX GET request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == "GET":
+            return jsonify({
+                "name": transaction.tr_name,
+                "amount": float(transaction.amount),
+                "payer": payer_name,
+                "participants": participant_names
+            })
+
+        # Handle POST request
+        if edit_tr_form.validate_on_submit():
+            # Update transaction basics
+            transaction.tr_name = edit_tr_form.transaction_name.data
+            transaction.amount = float(edit_tr_form.amount.data)
+
+            # Determine payer
+            if edit_tr_form.payer.data == "other" and edit_tr_form.payer_custom.data.strip():
+                payer = normalize_name(edit_tr_form.payer_custom.data)
+            else:
+                payer = normalize_name(edit_tr_form.payer.data)
+
+            # Gather participants
+            selected_participants = [normalize_name(p) for p in edit_tr_form.participants.data]
+            new_participants = []
+            if edit_tr_form.participants_names.data:
+                new_participants = [normalize_name(name) for name in edit_tr_form.participants_names.data.split(",") if name.strip()]
+            
+            all_participants = selected_participants + new_participants
+
+            if not payer:
+                flash("Please specify a payer.", "danger")
+                return redirect(url_for('edit_transaction', id=id))
+
+            if not all_participants:
+                flash("Please specify at least one participant.", "danger")
+                return redirect(url_for('edit_transaction', id=id))
+
+            if payer.lower() not in [p.lower() for p in all_participants]:
+                all_participants.append(payer)
+
+            # Ensure unique participants (case-insensitive)
+            seen = set()
+            final_participants = []
+            for name in all_participants:
+                lname = name.lower()
+                if lname not in seen:
+                    seen.add(lname)
+                    final_participants.append(name)
+
+            # Remove old participants and add new ones
+            db.query(Participant).filter_by(trans_id=transaction.trans_id).delete()
+
+            for name in final_participants:
+                db.add(Participant(
+                    name=name,
+                    is_payer=(name.lower() == payer.lower()),
+                    trans_id=transaction.trans_id
+                ))
+
+            update_session_names(payer, final_participants)
+
+            db.commit()
+            flash("Transaction updated successfully!", "success")
+            return redirect('/transactions')
+
+        # Populate form fields for GET
+        if request.method == "GET":
+            edit_tr_form.transaction_name.data = transaction.tr_name
+            edit_tr_form.amount.data = transaction.amount
+
+            # Set payer field
+            lower_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.payer.choices}
+            if payer_name and payer_name.lower() in lower_choices:
+                edit_tr_form.payer.data = lower_choices[payer_name.lower()]
+            else:
+                edit_tr_form.payer.data = "other"
+                edit_tr_form.payer_custom.data = payer_name
+
+            # Set participants fields
+            known = []
+            unknown = []
+
+            lower_participant_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.participants.choices}
+            for p in participant_names:
+                if p.lower() == payer_name.lower():
+                    continue  # skip payer from participants list
+                if p.lower() in lower_participant_choices:
+                    known.append(lower_participant_choices[p.lower()])
+                else:
+                    unknown.append(p)
+
+            edit_tr_form.participants.data = known
+            edit_tr_form.participants_names.data = ",".join(unknown) if unknown else ""
+
+        transaction_data = {
+            "id": transaction.trans_id,
+            "name": transaction.tr_name,
+            "amount": float(transaction.amount),
+            "payer": payer_name,
+            "participants": participant_names
+        }
+
+        return render_template(
+            'transactions.html', 
+            edit_tr_form = edit_tr_form,
+            add_tr_form = AddTransactionForm(),
+            delete_tr_form = DeleteTransactionForm(),
+            transaction=transaction_data,
+            trip_id=session["trip_id"],
+            tripname=session["tripname"])
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Error updating transaction: {str(e)}", "danger")
         return redirect('/transactions')
 
-    data = request.form
-
-    payer = data.get("payer")
-    payer_custom = data.get("payer_custom")
-    if payer == "other" and payer_custom:
-        payer = payer_custom.strip()
-
-    selected_participants = data.getlist("participants")
-    manual_participants = data.get("participants_names")
-
-    if manual_participants:
-        participant_names = [p.strip() for p in manual_participants.split(",") if p.strip()]
-    else:
-        participant_names = [p.strip() for p in selected_participants if p.strip()]
-
-    # Update transaction fields
-    transaction.tr_name = data["transaction_name"]
-    transaction.amount = float(data["amount"])
-
-    # Delete old participants
-    db.query(Participant).filter(Participant.trans_id == transaction.trans_id).delete()
-
-    # Add updated participants
-    for name in participant_names:
-        is_payer = (name == payer)
-        db.add(Participant(name=name, is_payer=is_payer, trans_id=transaction.trans_id))
-
-    db.commit()
-    db.close()
-
-    flash("Transaction updated successfully!", "success")
-    return redirect('/transactions')
+    finally:
+        db.close()
 
 
 @app.route('/transactions/delete/<int:id>', methods=["POST"])
