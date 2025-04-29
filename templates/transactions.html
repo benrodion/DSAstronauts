@@ -109,7 +109,7 @@
         <div class="trip-header d-flex justify-content-between align-items-center">
             <h1 class = "navbar-brand-text">{{ tripname }} - Transactions</h1>
             <div>
-                <a href="/calculate_split" class="btn btn-danger">Calculate Debt</a>
+                <a href="/calculate_split?trip_id={{ session['trip_id'] }}&tripname={{ session['tripname'] }}" class="btn btn-danger">Calculate Debt</a>
             </div>
         </div>
         
