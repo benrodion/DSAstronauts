@@ -83,7 +83,6 @@ def dashboard():
 
     trip_form = TripForm()
     db = SessionLocal()
-
     previous_trips = db.query(Trip).filter(Trip.group_id == session['group_id']).all()
 
     if trip_form.validate_on_submit():
@@ -92,15 +91,14 @@ def dashboard():
 
         # Check if trip already exists
         existing_trip = db.query(Trip).filter(
-            Trip.tripname == tripname, 
+            Trip.tripname == tripname,
             Trip.group_id == session['group_id']
         ).first()
 
         if existing_trip:
+            trip_form.yourtripname.errors.append("Trip already exists. Please use another name.")
             db.close()
-            return render_template('dashboard.html', previous_trips=previous_trips,
-                                   trip_form=trip_form,
-                                   message="Trip already exists. Please use another name.")
+            return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
 
         # Create a new trip
         new_trip = Trip(tripname=tripname, triptype=selected_type, group_id=session["group_id"])
@@ -117,6 +115,58 @@ def dashboard():
 
     db.close()
     return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
+
+def normalize_name(name, name_lookup=None):
+    """
+    Normalize a name consistently.
+    If name exists in lookup, use that canonical version.
+    Otherwise, properly capitalize the name.
+    """
+    # Clean the input
+    cleaned_name = name.strip()
+    if not cleaned_name:
+        return cleaned_name
+        
+    # Check for existing canonical version
+    if name_lookup:
+        lower_name = cleaned_name.lower()
+        if lower_name in name_lookup:
+            return name_lookup[lower_name]
+    
+    # For new names, ensure consistent capitalization
+    # (capitalize first letter of each word)
+    return " ".join(word.capitalize() for word in cleaned_name.split())
+
+def update_session_names(db, session, trip_id):
+    """
+    Completely rebuild the session name lists from the database
+    to ensure consistency.
+    """
+    # Query all unique participants and payers from the database for this trip
+    participants_query = (
+        db.query(Participant.name)
+        .join(Transaction, Participant.trans_id == Transaction.trans_id)
+        .filter(Transaction.trip_id == trip_id)
+        .distinct()
+    )
+    
+    payers_query = (
+        db.query(Participant.name)
+        .join(Transaction, Participant.trans_id == Transaction.trans_id)
+        .filter(Transaction.trip_id == trip_id, Participant.is_payer == True)
+        .distinct()
+    )
+    
+    # Get results as lists of names
+    all_participants = [p[0] for p in participants_query.all()]
+    all_payers = [p[0] for p in payers_query.all()]
+    
+    # Update session with fresh data
+    session["unique_participants"] = all_participants
+    session["unique_payers"] = all_payers
+    
+    # Return the name lists for immediate use
+    return all_participants, all_payers
 
 
 @app.route('/transactions', methods=['GET', 'POST'])
@@ -136,58 +186,68 @@ def transactions():
     current_trip_id = session["trip_id"]
     db = SessionLocal()
 
-    # Retrieve tripname and set it in the session
-    tripname = db.query(Trip).filter(Trip.trip_id == current_trip_id).first().tripname
-    session["tripname"] = tripname
+    try:
+        # Retrieve tripname and set it in the session
+        trip = db.query(Trip).filter(Trip.trip_id == current_trip_id).first()
+        if not trip:
+            flash("Trip not found", "danger")
+            return redirect('/dashboard')
+            
+        tripname = trip.tripname
+        session["tripname"] = tripname
 
-    # Retrieve transactions and participants
-    transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
-    participants = (
-        db.query(distinct(Participant.name))
-        .join(Transaction, Participant.trans_id == Transaction.trans_id)
-        .join(Trip, Transaction.trip_id == Trip.trip_id)
-        .filter(Trip.group_id == session["group_id"])
-        .all()
-    )
+        # Retrieve transactions
+        transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
 
-    # Format transactions data for the template
-    transactions_data = []
-    unique_participants = set()
-    unique_payers = set()
+        # Format transactions data for the template
+        transactions_data = []
 
-    for transaction in transactions:
-        participant_names = [p.name for p in transaction.participants]
-        unique_participants.update(participant_names)
+        for transaction in transactions:
+            participant_names = [p.name for p in transaction.participants]
+            payers = [p.name for p in transaction.participants if p.is_payer]
+            
+            payer_str = ", ".join(payers) if payers else "N/A"
 
-        payers = [p.name for p in transaction.participants if p.is_payer]
-        if payers:
-            unique_payers.update(payers)
-            payer_str = ", ".join(payers)
-        else:
-            payer_str = "N/A"
+            transactions_data.append({
+                "id": transaction.trans_id,
+                "name": transaction.tr_name,
+                "payer": payer_str,
+                "amount": transaction.amount,
+                "participants": ", ".join(participant_names)
+            })
 
-        transactions_data.append({
-            "id": transaction.trans_id,
-            "name": transaction.tr_name,
-            "payer": payer_str,
-            "amount": transaction.amount,
-            "participants": ", ".join(participant_names)
-        })
+        # Update session with fresh participant/payer lists from database
+        all_participants, all_payers = update_session_names(db, session, current_trip_id)
 
-    db.close()
+        # Initialize forms with the updated lists
+        add_tr_form = AddTransactionForm()
+        edit_tr_form = EditTransactionForm()
+        delete_tr_form = DeleteTransactionForm()
+        
+        # Set choices for the forms
+        if all_payers:
+            add_tr_form.payer.choices = [(payer, payer) for payer in all_payers] + [("other", "Other (Type Name)")]
+            edit_tr_form.payer.choices = [(payer, payer) for payer in all_payers] + [("other", "Other (Type Name)")]
+        
+        if all_participants:
+            add_tr_form.participants.choices = [(p, p) for p in all_participants]
+            edit_tr_form.participants.choices = [(p, p) for p in all_participants]
 
-    # Update session variables
-    session['unique_payers'] = list(unique_payers)
-    session['unique_participants'] = list(unique_participants)
-
-    return render_template("transactions.html", 
-                           transactions=transactions_data, 
-                           unique_payers=list(unique_payers),
-                           unique_participants=list(unique_participants),
-                           tripname=tripname,
-                           add_tr_form=AddTransactionForm(),
-                           edit_tr_form=EditTransactionForm(),
-                           delete_tr_form=DeleteTransactionForm())
+        return render_template("transactions.html", 
+                            transactions=transactions_data, 
+                            unique_payers=all_payers,
+                            unique_participants=all_participants,
+                            tripname=tripname,
+                            add_tr_form=add_tr_form,
+                            edit_tr_form=edit_tr_form,
+                            delete_tr_form=delete_tr_form)
+    
+    except Exception as e:
+        flash(f"Error loading transactions: {str(e)}", "danger")
+        return redirect('/dashboard')
+    
+    finally:
+        db.close()
 
 
 @app.route('/transactions/add', methods=["POST"])
@@ -198,7 +258,6 @@ def add_transaction():
         flash("No active trip selected", "warning")
         return redirect('/')
 
-    add_tr_form = AddTransactionForm()
     db = SessionLocal()
     try:
         # Get unique names from session for case-insensitive lookups
@@ -209,14 +268,10 @@ def add_transaction():
         all_known_names = unique_payers + unique_participants
         name_lookup = {name.lower(): name for name in all_known_names}
         
-        # Helper function to normalize names based on existing known names
-        def normalize_name(name):
-            """Return canonical version of name if it exists, otherwise the cleaned input name."""
-            return name_lookup.get(name.strip().lower(), name.strip())
-        
-        # Update form choices with existing data
+        # Create the form and populate it with choices
+        add_tr_form = AddTransactionForm()
         if unique_payers:
-            add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + add_tr_form.payer.choices
+            add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + [("other", "Other (Type Name)")]
         
         if unique_participants:
             add_tr_form.participants.choices = [(p, p) for p in unique_participants]
@@ -228,18 +283,18 @@ def add_transaction():
             
             # Process payer information
             if add_tr_form.payer.data == "other" and add_tr_form.payer_custom.data.strip():
-                payer = normalize_name(add_tr_form.payer_custom.data)
+                payer = normalize_name(add_tr_form.payer_custom.data, name_lookup)
             else:
-                payer = normalize_name(add_tr_form.payer.data)
+                payer = normalize_name(add_tr_form.payer.data, name_lookup)
                 
             # Process participants information
-            selected_participants = [normalize_name(p) for p in add_tr_form.participants.data]
+            selected_participants = [normalize_name(p, name_lookup) for p in add_tr_form.participants.data]
             
             # Handle new participants added via JavaScript
             new_participants = []
             if add_tr_form.participants_names.data:
                 new_participants_raw = add_tr_form.participants_names.data.split(",")
-                new_participants = [normalize_name(p) for p in new_participants_raw if p.strip()]
+                new_participants = [normalize_name(p, name_lookup) for p in new_participants_raw if p.strip()]
             
             # Combine all participants
             all_participants = selected_participants + new_participants
@@ -254,13 +309,13 @@ def add_transaction():
                 all_participants.append(payer)
                 
             # Remove duplicates while preserving case from known names
-            unique_participants_set = set()
+            participant_set = set()
             final_participants = []
             
             for name in all_participants:
                 name_lower = name.lower()
-                if name_lower not in unique_participants_set:
-                    unique_participants_set.add(name_lower)
+                if name_lower not in participant_set:
+                    participant_set.add(name_lower)
                     final_participants.append(name)
             
             # Create the transaction record
@@ -284,8 +339,8 @@ def add_transaction():
             # Commit all changes
             db.commit()
             
-            # Update session with new unique names for future use
-            update_session_names(payer, final_participants)
+            # Update session with FRESH data from database
+            update_session_names(db, session, session["trip_id"])
             
             flash("Transaction added successfully!", "success")
             return redirect('/transactions')
@@ -302,27 +357,6 @@ def add_transaction():
         db.close()
         
     return redirect('/transactions')
-
-def update_session_names(payer, participants):
-    """Update session with new unique names."""
-    # Update payers list
-    existing_payers = {p.lower() for p in session.get("unique_payers", [])}
-    if payer.lower() not in existing_payers:
-        session["unique_payers"] = session.get("unique_payers", []) + [payer]
-        
-    # Update participants list
-    existing_participants = {p.lower() for p in session.get("unique_participants", [])}
-    new_participants = []
-    
-    for participant in participants:
-        if participant.lower() not in existing_participants:
-            new_participants.append(participant)
-            existing_participants.add(participant.lower())
-            
-    if new_participants:
-        session["unique_participants"] = session.get("unique_participants", []) + new_participants
-
-
 
 @app.route('/transactions/edit/<int:id>', methods=["GET", "POST"])
 def edit_transaction(id):
@@ -342,29 +376,36 @@ def edit_transaction(id):
         payer_name = next((p.name for p in participants if p.is_payer), None)
         participant_names = [p.name for p in participants]
 
+        # Get fresh participant and payer lists from database
+        all_participants, all_payers = update_session_names(db, session, session["trip_id"])
+        
+        # Create forms with updated choices
         edit_tr_form = EditTransactionForm()
+        add_tr_form = AddTransactionForm()
+        delete_tr_form = DeleteTransactionForm()
+        
+        # Add the current transaction's participants and payers to the lists to ensure they're included
+        all_payer_names = set(all_payers)
+        all_participant_names = set(all_participants)
+        
+        if payer_name and payer_name not in all_payer_names:
+            all_payers.append(payer_name)
+            all_payer_names.add(payer_name)
+        
+        for name in participant_names:
+            if name not in all_participant_names:
+                all_participants.append(name)
+                all_participant_names.add(name)
+        
+        # Create a comprehensive case-insensitive lookup
+        name_lookup = {name.lower(): name for name in all_participants + all_payers}
 
-        # Prepare session names
-        unique_payers = session.get('unique_payers', [])
-        unique_participants = session.get('unique_participants', [])
-        name_lookup = {name.lower(): name for name in unique_payers + unique_participants}
-
-        def normalize_name(name):
-            return name_lookup.get(name.strip().lower(), name.strip())
-
-        # Update form choices dynamically based on session + database
-        db_payers = [payer_name] if payer_name else []
-        db_participants = participant_names
-
-        unique_payers = session.get('unique_payers', [])
-        unique_participants = session.get('unique_participants', [])
-
-        all_payers = set(unique_payers + db_payers)
-        all_participants = set(unique_participants + db_participants)
-
+        # Update form choices for both forms
         edit_tr_form.payer.choices = [(payer, payer) for payer in all_payers if payer] + [("other", "Other (Type Name)")]
         edit_tr_form.participants.choices = [(p, p) for p in all_participants if p]
-
+        
+        add_tr_form.payer.choices = [(payer, payer) for payer in all_payers if payer] + [("other", "Other (Type Name)")]
+        add_tr_form.participants.choices = [(p, p) for p in all_participants if p]
 
         # Handle AJAX GET request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == "GET":
@@ -383,15 +424,15 @@ def edit_transaction(id):
 
             # Determine payer
             if edit_tr_form.payer.data == "other" and edit_tr_form.payer_custom.data.strip():
-                payer = normalize_name(edit_tr_form.payer_custom.data)
+                payer = normalize_name(edit_tr_form.payer_custom.data, name_lookup)
             else:
-                payer = normalize_name(edit_tr_form.payer.data)
+                payer = normalize_name(edit_tr_form.payer.data, name_lookup)
 
             # Gather participants
-            selected_participants = [normalize_name(p) for p in edit_tr_form.participants.data]
+            selected_participants = [normalize_name(p, name_lookup) for p in edit_tr_form.participants.data]
             new_participants = []
             if edit_tr_form.participants_names.data:
-                new_participants = [normalize_name(name) for name in edit_tr_form.participants_names.data.split(",") if name.strip()]
+                new_participants = [normalize_name(name, name_lookup) for name in edit_tr_form.participants_names.data.split(",") if name.strip()]
             
             all_participants = selected_participants + new_participants
 
@@ -425,22 +466,30 @@ def edit_transaction(id):
                     trans_id=transaction.trans_id
                 ))
 
-            update_session_names(payer, final_participants)
-
+            # Update database
             db.commit()
+            
+            # Update session with fresh data after changes
+            update_session_names(db, session, session["trip_id"])
+            
             flash("Transaction updated successfully!", "success")
             return redirect('/transactions')
 
         # Populate form fields for GET
-        if request.method == "GET":
+        if request.method == "GET" and not request.headers.get('X-Requested-With'):
             edit_tr_form.transaction_name.data = transaction.tr_name
             edit_tr_form.amount.data = transaction.amount
 
             # Set payer field
-            lower_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.payer.choices}
-            if payer_name and payer_name.lower() in lower_choices:
-                edit_tr_form.payer.data = lower_choices[payer_name.lower()]
-            else:
+            payer_found = False
+            if payer_name:
+                for choice in edit_tr_form.payer.choices:
+                    if choice[0].lower() == payer_name.lower():
+                        edit_tr_form.payer.data = choice[0]
+                        payer_found = True
+                        break
+                        
+            if not payer_found:
                 edit_tr_form.payer.data = "other"
                 edit_tr_form.payer_custom.data = payer_name
 
@@ -448,13 +497,18 @@ def edit_transaction(id):
             known = []
             unknown = []
 
-            lower_participant_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.participants.choices}
             for p in participant_names:
                 if p.lower() == payer_name.lower():
                     continue  # skip payer from participants list
-                if p.lower() in lower_participant_choices:
-                    known.append(lower_participant_choices[p.lower()])
-                else:
+                
+                found = False
+                for choice in edit_tr_form.participants.choices:
+                    if choice[0].lower() == p.lower():
+                        known.append(choice[0])
+                        found = True
+                        break
+                        
+                if not found:
                     unknown.append(p)
 
             edit_tr_form.participants.data = known
@@ -470,10 +524,12 @@ def edit_transaction(id):
 
         return render_template(
             'transactions.html', 
-            edit_tr_form = edit_tr_form,
-            add_tr_form = AddTransactionForm(),
-            delete_tr_form = DeleteTransactionForm(),
+            edit_tr_form=edit_tr_form,
+            add_tr_form=add_tr_form,
+            delete_tr_form=delete_tr_form,
             transaction=transaction_data,
+            unique_payers=all_payers,
+            unique_participants=all_participants,
             trip_id=session["trip_id"],
             tripname=session["tripname"])
 
@@ -484,7 +540,6 @@ def edit_transaction(id):
 
     finally:
         db.close()
-
 
 @app.route('/transactions/delete/<int:id>', methods=["POST"])
 def delete_transaction(id):
