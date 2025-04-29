@@ -3,13 +3,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+	<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.arrow-container {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.message {
+    font-size: 10vw;
+    color: #ff69b4;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px #fff, 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 40px #ff69b4;
+    animation: sparkle 1.5s infinite;
+    text-align: center;
+    z-index: 2;
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+    0%, 100% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 40px #ff69b4;
+    }
+    50% {
+        text-shadow: 0 0 10px #fff, 0 0 20px #ff1493, 0 0 30px #ff69b4, 0 0 60px #ff69b4;
+    }
+}
+
+/* Arrow styling */
+.arrow-icon {
+    position: absolute;
+    font-size: 60px;
+    color: #ff69b4;
+    text-shadow: 0 0 10px #ff69b4;
+    animation: pulse 2s infinite;
+}
+
+/* Positions */
+.arrow-top {
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+	font-size: 150px; 
+}
+
+.arrow-bottom-left {
+    bottom: 10%;
+    left: 10%;
+    transform: rotate(45deg);
+	font-size: 150px; 
+}
+
+.arrow-bottom-right {
+    bottom: 10%;
+    right: 10%;
+    transform: rotate(-45deg);
+	font-size: 150px; 
+}
+
+/* Arrow glow animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+        
+    }
+}
+.login-redirect {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 2;
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+.login-text {
+    font-size: 2.5rem;
+    color: #ff69b4;
+    font-weight: bold;
+    text-shadow: 0 0 5px #fff, 0 0 10px #ff69b4;
+}
+
+.login-img {
+    width: 120px;
+    height:80px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-img:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px #ff69b4;
+}
+
+.login-arrow {
+    font-size: 2.5rem;
+    vertical-align: middle;
+    color: #ff69b4;
+    text-shadow: 0 0 5px #fff, 0 0 10px #ff69b4;
+    margin-left: 5px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px) translateX(-50%); }
+    to { opacity: 1; transform: translateY(0) translateX(-50%); }
+}
+
+	</style>
+	
 </head>	
 	<div class="section">
 		<div class="container">
 			<div class="row full-height justify-content-center">
 				<div class="col-12 text-center align-self-center py-5">
 					<div class="section pb-5 pt-5 pt-sm-2 text-center">
-                        <h2 class="message">{{ message }}</h2>
+                        <div class="arrow-container">
+							<span class="material-icons arrow-icon arrow-top">arrow_downward</span>
+							<span class="material-icons arrow-icon arrow-bottom-left">arrow_upward</span>
+							<span class="material-icons arrow-icon arrow-bottom-right">arrow_upward</span>
+							<h2 class="message">{{ message }}</h2>
+							<div class="login-redirect">
+								<span class="login-text">go back to login<span class="material-icons login-arrow">arrow_forward</span></span>
+								<a href="/">
+									<img src="{{ url_for('static', filename='friends.webp') }}" alt="Login" class="login-img">
+								</a>
+							</div>
+						</div>						
                         {% if name %}
                         <h1 class="welcome-text">Welcome, {{ name }}!</h1>
                         {% endif %}

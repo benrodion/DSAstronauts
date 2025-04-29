@@ -80,55 +80,43 @@ def signup():
 def dashboard():
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
-    add_tr_form = AddTransactionForm()
-    edit_tr_form = EditTransactionForm()
-    delete_tr_form = DeleteTransactionForm()
+
+    trip_form = TripForm()
     db = SessionLocal()
-    # Fetch previous trips for the group
+
     previous_trips = db.query(Trip).filter(Trip.group_id == session['group_id']).all()
-    
-    if request.method == 'POST':
-        # Get form values
-        selected_type = request.form.get("tripSelection", "")
-        tripname = request.form.get("yourtripname", "")
-        
-        # Validation
-        if selected_type not in ['beach', 'dinner', 'skiing', 'museum', 'film', 'other']:
-            db.close()
-            return render_template('login_result.html', 
-                                  message="Trip selection missing")
-                                  
-        if not tripname:
-            db.close()
-            return render_template('login_result.html', 
-                                  message="Trip name missing")
-        
-        # Check if trip exists
-        existing_trip = db.query(Trip).filter(Trip.tripname == tripname, Trip.group_id == session['group_id']).first()
+
+    if trip_form.validate_on_submit():
+        selected_type = trip_form.tripSelection.data
+        tripname = trip_form.yourtripname.data.strip()
+
+        # Check if trip already exists
+        existing_trip = db.query(Trip).filter(
+            Trip.tripname == tripname, 
+            Trip.group_id == session['group_id']
+        ).first()
+
         if existing_trip:
             db.close()
-            return render_template('dashboard.html', 
-                                  message="Trip already exists. Please use another name")
-        
-        # Create new trip
-        session["trip_type"] = selected_type
-        session["tripname"] = tripname
-        
+            return render_template('dashboard.html', previous_trips=previous_trips,
+                                   trip_form=trip_form,
+                                   message="Trip already exists. Please use another name.")
+
+        # Create a new trip
         new_trip = Trip(tripname=tripname, triptype=selected_type, group_id=session["group_id"])
         db.add(new_trip)
         db.commit()
         db.refresh(new_trip)
+
+        # Set session variables
         session["trip_id"] = new_trip.trip_id
+        session["tripname"] = new_trip.tripname
+
         db.close()
-        
-        return render_template('transactions.html', tripname=new_trip.tripname,
-                                trip_id=new_trip.trip_id, 
-                                add_tr_form=add_tr_form,
-                                edit_tr_form=edit_tr_form,
-                                delete_tr_form=delete_tr_form)
-   
+        return redirect('/transactions')
+
     db.close()
-    return render_template('dashboard.html', previous_trips=previous_trips)
+    return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
 
 
 @app.route('/transactions', methods=['GET', 'POST'])
@@ -139,43 +127,38 @@ def transactions():
             session['trip_id'] = trip_id
 
     if "trip_id" not in session:
-        return redirect('/')
+        flash("No trip selected. Please select a trip first.", "warning")
+        return redirect('/dashboard')
 
     if 'group_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
 
     current_trip_id = session["trip_id"]
     db = SessionLocal()
-    add_tr_form = AddTransactionForm()
-    edit_tr_form = EditTransactionForm()
-    delete_tr_form = DeleteTransactionForm()
-    
-    # Retrieve only transactions related to the user's group_id
-    transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
+
+    # Retrieve tripname and set it in the session
     tripname = db.query(Trip).filter(Trip.trip_id == current_trip_id).first().tripname
-    
-    # Get all participants for the forms (filtered by group)
-    participants =(
+    session["tripname"] = tripname
+
+    # Retrieve transactions and participants
+    transactions = db.query(Transaction).filter(Transaction.trip_id == current_trip_id).all()
+    participants = (
         db.query(distinct(Participant.name))
         .join(Transaction, Participant.trans_id == Transaction.trans_id)
         .join(Trip, Transaction.trip_id == Trip.trip_id)
         .filter(Trip.group_id == session["group_id"])
         .all()
     )
-    
+
     # Format transactions data for the template
     transactions_data = []
     unique_participants = set()
-    unique_payers = set()  # Optional: collect unique payers too
+    unique_payers = set()
 
     for transaction in transactions:
-        # Extract all participant names
         participant_names = [p.name for p in transaction.participants]
-
-        # Add to unique participants
         unique_participants.update(participant_names)
 
-        # Identify payer(s) for this transaction
         payers = [p.name for p in transaction.participants if p.is_payer]
         if payers:
             unique_payers.update(payers)
@@ -193,172 +176,314 @@ def transactions():
 
     db.close()
 
-
-    add_tr_form.payer.choices = sorted([(payer, payer.title()) for payer in unique_payers]) + [("other", "Other (Type Name)")]
-    add_tr_form.participants.choices = sorted([(p, p.title()) for p in unique_participants])
-
-
+    # Update session variables
     session['unique_payers'] = list(unique_payers)
     session['unique_participants'] = list(unique_participants)
 
-
     return render_template("transactions.html", 
-                        transactions=transactions_data, 
-                        unique_payers=list(unique_payers),
-                        unique_participants=list(unique_participants),
-                        tripname=tripname,
-                        add_tr_form=add_tr_form,
-                        edit_tr_form=edit_tr_form,
-                        delete_tr_form=delete_tr_form)
+                           transactions=transactions_data, 
+                           unique_payers=list(unique_payers),
+                           unique_participants=list(unique_participants),
+                           tripname=tripname,
+                           add_tr_form=AddTransactionForm(),
+                           edit_tr_form=EditTransactionForm(),
+                           delete_tr_form=DeleteTransactionForm())
 
 
 @app.route('/transactions/add', methods=["POST"])
 def add_transaction():
+    """Add a new transaction to the current trip."""
+    # Check if required session variables exist
     if "group_id" not in session or "trip_id" not in session:
+        flash("No active trip selected", "warning")
         return redirect('/')
 
     add_tr_form = AddTransactionForm()
     db = SessionLocal()
     try:
-        # Build dictionary for case-insensitive lookups
+        # Get unique names from session for case-insensitive lookups
         unique_payers = session.get('unique_payers', [])
         unique_participants = session.get('unique_participants', [])
-        all_known = unique_payers + unique_participants
-        known_names_dict = {name.lower(): name for name in all_known}  # maps "hanna" -> "Hanna"
-
+        
+        # Create a case-insensitive lookup dictionary
+        all_known_names = unique_payers + unique_participants
+        name_lookup = {name.lower(): name for name in all_known_names}
+        
+        # Helper function to normalize names based on existing known names
         def normalize_name(name):
-            return known_names_dict.get(name.strip().lower(), name.strip())
-
-        # Update form choices
+            """Return canonical version of name if it exists, otherwise the cleaned input name."""
+            return name_lookup.get(name.strip().lower(), name.strip())
+        
+        # Update form choices with existing data
         if unique_payers:
             add_tr_form.payer.choices = [(payer, payer) for payer in unique_payers] + add_tr_form.payer.choices
-        add_tr_form.participants.choices = [(p, p) for p in unique_participants]
-
+        
+        if unique_participants:
+            add_tr_form.participants.choices = [(p, p) for p in unique_participants]
+        
         if add_tr_form.validate_on_submit():
+            # Get basic transaction data
             transaction_name = add_tr_form.transaction_name.data
             amount = add_tr_form.amount.data
-
-            # Normalize payer input properly
-            payer_input = add_tr_form.payer.data
-            payer_custom = add_tr_form.payer_custom.data.strip()
-
-            if payer_input == "other" and payer_custom:
-                payer = normalize_name(payer_custom)
+            
+            # Process payer information
+            if add_tr_form.payer.data == "other" and add_tr_form.payer_custom.data.strip():
+                payer = normalize_name(add_tr_form.payer_custom.data)
             else:
-                payer = normalize_name(payer_input)
-
-            # Normalize participants
-            selected_participants = add_tr_form.participants.data
-            new_participants_raw = add_tr_form.participants_names.data.split(",") if add_tr_form.participants_names.data else []
-            new_participants = [normalize_name(p) for p in new_participants_raw if p.strip()]
-            participant_names = [normalize_name(p) for p in selected_participants + new_participants]
-
-            if not payer or not participant_names:
-                flash("Please fill in all required fields", "danger")
-                return redirect(url_for('transaction'))
-
-            # Add payer to participants if not already included
-            if payer.lower() not in [p.lower() for p in participant_names]:
-                participant_names.append(payer)
-
-            # Deduplicate participants (case-insensitive)
-            seen = set()
-            unique_participant_names = []
-            for name in participant_names:
-                lname = name.lower()
-                if lname not in seen:
-                    seen.add(lname)
-                    unique_participant_names.append(name)
-
-            # Create transaction
+                payer = normalize_name(add_tr_form.payer.data)
+                
+            # Process participants information
+            selected_participants = [normalize_name(p) for p in add_tr_form.participants.data]
+            
+            # Handle new participants added via JavaScript
+            new_participants = []
+            if add_tr_form.participants_names.data:
+                new_participants_raw = add_tr_form.participants_names.data.split(",")
+                new_participants = [normalize_name(p) for p in new_participants_raw if p.strip()]
+            
+            # Combine all participants
+            all_participants = selected_participants + new_participants
+            
+            # Validation
+            if not payer or not all_participants:
+                flash("Please provide a payer and at least one participant", "danger")
+                return redirect('/transactions')
+                
+            # Make sure payer is included in participants list
+            if not any(p.lower() == payer.lower() for p in all_participants):
+                all_participants.append(payer)
+                
+            # Remove duplicates while preserving case from known names
+            unique_participants_set = set()
+            final_participants = []
+            
+            for name in all_participants:
+                name_lower = name.lower()
+                if name_lower not in unique_participants_set:
+                    unique_participants_set.add(name_lower)
+                    final_participants.append(name)
+            
+            # Create the transaction record
             new_transaction = Transaction(
                 tr_name=transaction_name,
                 amount=float(amount),
                 trip_id=session["trip_id"]
             )
             db.add(new_transaction)
-            db.commit()
-            db.refresh(new_transaction)
-
-            # Add participants
-            for name in unique_participant_names:
-                is_payer = (name.lower() == payer.lower())
+            db.flush()  # Get the ID without committing
+            
+            # Add all participants to the transaction
+            for name in final_participants:
                 participant = Participant(
                     name=name,
-                    is_payer=is_payer,
+                    is_payer=(name.lower() == payer.lower()),
                     trans_id=new_transaction.trans_id
                 )
                 db.add(participant)
-
+                
+            # Commit all changes
             db.commit()
-
-            # Update session payer and participant lists
-            existing_payer_names = set(n.lower() for n in session.get("unique_payers", []))
-            if payer.lower() not in existing_payer_names:
-                session["unique_payers"] = session.get("unique_payers", []) + [payer]
-
-            existing_participant_names = set(n.lower() for n in session.get("unique_participants", []))
-            new_unique_participants = [p for p in unique_participant_names if p.lower() not in existing_participant_names]
-            session["unique_participants"] = session.get("unique_participants", []) + new_unique_participants
-
+            
+            # Update session with new unique names for future use
+            update_session_names(payer, final_participants)
+            
             flash("Transaction added successfully!", "success")
-
+            return redirect('/transactions')
+        
+        else:
+            print("Form did not validate")
+            print(add_tr_form.errors)
+            
     except Exception as e:
         db.rollback()
         flash(f"Error adding transaction: {str(e)}", "danger")
-
+        
     finally:
         db.close()
-
+        
     return redirect('/transactions')
 
+def update_session_names(payer, participants):
+    """Update session with new unique names."""
+    # Update payers list
+    existing_payers = {p.lower() for p in session.get("unique_payers", [])}
+    if payer.lower() not in existing_payers:
+        session["unique_payers"] = session.get("unique_payers", []) + [payer]
+        
+    # Update participants list
+    existing_participants = {p.lower() for p in session.get("unique_participants", [])}
+    new_participants = []
+    
+    for participant in participants:
+        if participant.lower() not in existing_participants:
+            new_participants.append(participant)
+            existing_participants.add(participant.lower())
+            
+    if new_participants:
+        session["unique_participants"] = session.get("unique_participants", []) + new_participants
 
-@app.route('/transactions/edit/<int:id>', methods=["POST"])
+
+
+@app.route('/transactions/edit/<int:id>', methods=["GET", "POST"])
 def edit_transaction(id):
-    if "group_id" not in session:
+    """Edit an existing transaction."""
+    if "group_id" not in session or "trip_id" not in session:
+        flash("No active trip selected", "warning")
         return redirect('/')
 
     db = SessionLocal()
-    transaction = db.query(Transaction).filter(Transaction.trans_id == id).first()
-    edit_tr_form = EditTransactionForm()
+    try:
+        transaction = db.query(Transaction).filter_by(trans_id=id).first()
+        if not transaction:
+            flash("Transaction not found!", "danger")
+            return redirect('/transactions')
 
-    if not transaction:
-        db.close()
-        flash("Transaction not found!", "error")
+        participants = db.query(Participant).filter_by(trans_id=transaction.trans_id).all()
+        payer_name = next((p.name for p in participants if p.is_payer), None)
+        participant_names = [p.name for p in participants]
+
+        edit_tr_form = EditTransactionForm()
+
+        # Prepare session names
+        unique_payers = session.get('unique_payers', [])
+        unique_participants = session.get('unique_participants', [])
+        name_lookup = {name.lower(): name for name in unique_payers + unique_participants}
+
+        def normalize_name(name):
+            return name_lookup.get(name.strip().lower(), name.strip())
+
+        # Update form choices dynamically based on session + database
+        db_payers = [payer_name] if payer_name else []
+        db_participants = participant_names
+
+        unique_payers = session.get('unique_payers', [])
+        unique_participants = session.get('unique_participants', [])
+
+        all_payers = set(unique_payers + db_payers)
+        all_participants = set(unique_participants + db_participants)
+
+        edit_tr_form.payer.choices = [(payer, payer) for payer in all_payers if payer] + [("other", "Other (Type Name)")]
+        edit_tr_form.participants.choices = [(p, p) for p in all_participants if p]
+
+
+        # Handle AJAX GET request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == "GET":
+            return jsonify({
+                "name": transaction.tr_name,
+                "amount": float(transaction.amount),
+                "payer": payer_name,
+                "participants": participant_names
+            })
+
+        # Handle POST request
+        if edit_tr_form.validate_on_submit():
+            # Update transaction basics
+            transaction.tr_name = edit_tr_form.transaction_name.data
+            transaction.amount = float(edit_tr_form.amount.data)
+
+            # Determine payer
+            if edit_tr_form.payer.data == "other" and edit_tr_form.payer_custom.data.strip():
+                payer = normalize_name(edit_tr_form.payer_custom.data)
+            else:
+                payer = normalize_name(edit_tr_form.payer.data)
+
+            # Gather participants
+            selected_participants = [normalize_name(p) for p in edit_tr_form.participants.data]
+            new_participants = []
+            if edit_tr_form.participants_names.data:
+                new_participants = [normalize_name(name) for name in edit_tr_form.participants_names.data.split(",") if name.strip()]
+            
+            all_participants = selected_participants + new_participants
+
+            if not payer:
+                flash("Please specify a payer.", "danger")
+                return redirect(url_for('edit_transaction', id=id))
+
+            if not all_participants:
+                flash("Please specify at least one participant.", "danger")
+                return redirect(url_for('edit_transaction', id=id))
+
+            if payer.lower() not in [p.lower() for p in all_participants]:
+                all_participants.append(payer)
+
+            # Ensure unique participants (case-insensitive)
+            seen = set()
+            final_participants = []
+            for name in all_participants:
+                lname = name.lower()
+                if lname not in seen:
+                    seen.add(lname)
+                    final_participants.append(name)
+
+            # Remove old participants and add new ones
+            db.query(Participant).filter_by(trans_id=transaction.trans_id).delete()
+
+            for name in final_participants:
+                db.add(Participant(
+                    name=name,
+                    is_payer=(name.lower() == payer.lower()),
+                    trans_id=transaction.trans_id
+                ))
+
+            update_session_names(payer, final_participants)
+
+            db.commit()
+            flash("Transaction updated successfully!", "success")
+            return redirect('/transactions')
+
+        # Populate form fields for GET
+        if request.method == "GET":
+            edit_tr_form.transaction_name.data = transaction.tr_name
+            edit_tr_form.amount.data = transaction.amount
+
+            # Set payer field
+            lower_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.payer.choices}
+            if payer_name and payer_name.lower() in lower_choices:
+                edit_tr_form.payer.data = lower_choices[payer_name.lower()]
+            else:
+                edit_tr_form.payer.data = "other"
+                edit_tr_form.payer_custom.data = payer_name
+
+            # Set participants fields
+            known = []
+            unknown = []
+
+            lower_participant_choices = {choice[0].lower(): choice[0] for choice in edit_tr_form.participants.choices}
+            for p in participant_names:
+                if p.lower() == payer_name.lower():
+                    continue  # skip payer from participants list
+                if p.lower() in lower_participant_choices:
+                    known.append(lower_participant_choices[p.lower()])
+                else:
+                    unknown.append(p)
+
+            edit_tr_form.participants.data = known
+            edit_tr_form.participants_names.data = ",".join(unknown) if unknown else ""
+
+        transaction_data = {
+            "id": transaction.trans_id,
+            "name": transaction.tr_name,
+            "amount": float(transaction.amount),
+            "payer": payer_name,
+            "participants": participant_names
+        }
+
+        return render_template(
+            'transactions.html', 
+            edit_tr_form = edit_tr_form,
+            add_tr_form = AddTransactionForm(),
+            delete_tr_form = DeleteTransactionForm(),
+            transaction=transaction_data,
+            trip_id=session["trip_id"],
+            tripname=session["tripname"])
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Error updating transaction: {str(e)}", "danger")
         return redirect('/transactions')
 
-    data = request.form
-
-    payer = data.get("payer")
-    payer_custom = data.get("payer_custom")
-    if payer == "other" and payer_custom:
-        payer = payer_custom.strip()
-
-    selected_participants = data.getlist("participants")
-    manual_participants = data.get("participants_names")
-
-    if manual_participants:
-        participant_names = [p.strip() for p in manual_participants.split(",") if p.strip()]
-    else:
-        participant_names = [p.strip() for p in selected_participants if p.strip()]
-
-    # Update transaction fields
-    transaction.tr_name = data["transaction_name"]
-    transaction.amount = float(data["amount"])
-
-    # Delete old participants
-    db.query(Participant).filter(Participant.trans_id == transaction.trans_id).delete()
-
-    # Add updated participants
-    for name in participant_names:
-        is_payer = (name == payer)
-        db.add(Participant(name=name, is_payer=is_payer, trans_id=transaction.trans_id))
-
-    db.commit()
-    db.close()
-
-    flash("Transaction updated successfully!", "success")
-    return redirect('/transactions')
+    finally:
+        db.close()
 
 
 @app.route('/transactions/delete/<int:id>', methods=["POST"])
@@ -391,14 +516,33 @@ def delete_transaction(id):
 
 @app.route('/calculate_split')
 def calculate_split():
-    if "trip_id" not in session or "tripname" not in session:
+    # Check if trip_id and tripname are in the session
+    trip_id = session.get("trip_id")
+    tripname = session.get("tripname")
+
+    # If not in session, try to retrieve from query parameters
+    if not trip_id or not tripname:
+        trip_id = request.args.get("trip_id")
+        tripname = request.args.get("tripname")
+
+    # If still missing, redirect to the dashboard
+    if not trip_id or not tripname:
+        flash("No trip selected. Please select a trip first.", "warning")
         return redirect('/dashboard')
-    trip_id = int(session["trip_id"])
+
+    # Convert trip_id to integer
+    try:
+        trip_id = int(trip_id)
+    except ValueError:
+        flash("Invalid trip ID.", "danger")
+        return redirect('/dashboard')
+
+    # Prepare transactions for the split
     transactions = prepare_transactions_for_split(trip_id)
     splitter = OptimalSplit()
     result = splitter.minTransfers(transactions)
 
-    return render_template("split_result.html", result=result, tripname=session["tripname"])
+    return render_template("calculate.html", result=result, tripname=tripname)
 
 
 if __name__ == "__main__":

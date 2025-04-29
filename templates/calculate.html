@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <!-- FontAwesome -->
+    <script src="https://kit.fontawesome.com/aabba25cda.js" crossorigin="anonymous"></script>
+
+    <title>Styled Page with Navbar</title>
+
+<style>
+    /* Shimmer animation */
+    .shimmer-button {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shimmer-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -75%;
+        height: 100%;
+        width: 50%;
+        background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            left: -75%;
+        }
+        100% {
+            left: 125%;
+        }
+    }
+
+    /* Table styling */
+    .pink-table {
+        border: 3px solid #c04154; 
+        width: 100%;
+        font-family: 'Open Sans';
+    }
+
+    .pink-table th, .pink-table td {
+        border: 2px solid #c04154; 
+        padding: 10px;
+        text-align: center;
+        font-family: 'Open Sans';
+    }
+
+    .below-block {
+        background-color: #fff0f6;
+        padding: 30px;
+        margin-top: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-family: 'Open Sans';
+    }
+
+    .three-pictures {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .three-pictures img {
+        height: 200px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+            /* Make Navbar Follow styles.css Theme */
+            .navbar {
+            background-color: #f0e9e8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px 0; /* Reduce navbar padding */
+            max-height: 56px; /* Standard Bootstrap height */
+        }
+        .navbar-brand, .nav-link {
+            color: #c04154 !important;
+            font-family: 'Open Sans';
+            font-weight: 600;
+        }
+        .navbar-brand-text{
+          text-transform: uppercase;
+          font-weight: 700;
+          color: #c04154 !important;
+          font-family: 'Open Sans';
+        }
+        .nav-link:hover {
+            color: #bb1a1a !important;
+        }
+        .container-blocks {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: #eccfca;
+        }
+        .block {
+            flex: 1;
+            padding: 20px;
+            margin: 10px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            min-height: 800px;
+        }
+        .center-block {
+            flex: 2;
+        }  
+        .inner-block {/* Make center block wider */
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            justify-content: center; /* Centers vertically */
+            align-items: center; /* Centers horizontally */
+        }
+        .bottom-center {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .image {
+          width: 200px;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .imageBig {
+          height: 300px;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        #tripSelection {
+            appearance: none;
+            background-color: white;
+            color: black;
+            font-weight: normal;
+            border: 1px solid #c04154;
+            padding: 8px;
+        }
+        .select{
+            font-family: 'Font Awesome 5 Free' , 'arial'
+        }
+        .body{
+            background-color: #eccfca;
+            }
+        /* Euro Sign shimmer effect */
+    .euro-sign {
+        font-size: 48px;
+        color: #c04154;
+        font-weight: bold;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        animation: shimmer 2.5s infinite;
+        opacity: 0.8;
+        z-index: 0;
+        }
+
+    .euro-left {
+        left: 50px;
+        }
+
+    .euro-right {
+        right: 50px;
+        }
+
+    @keyframes shimmer {
+        0% {
+            opacity: 0.3;
+            transform: translateY(-50%) scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+        }
+        100% {
+            opacity: 0.3;
+            transform: translateY(-50%) scale(1);
+        }
+    }
+</style>
+</head>
+
+<body class = "body">
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="#"><span class="fa-solid fa-calculator"></span>Girl Math</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard#previous-trips"><span class="fa-solid fa-landmark"></span> Old Trips</a></li>                  
+                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
+               </ul>
+            <ul class="navbar-nav navbar-right">
+                <li class ="nav-item"></li><a class = "nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Back to login</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Background decorations with euro signs -->
+<div class="container d-flex justify-content-center mt-5">
+    <div class="euro-sign euro-left" style="top: 30%; animation-delay: 0s;">€</div>
+    <div class="euro-sign euro-left" style="top: 50%; animation-delay: 0.5s;">€</div>
+    <div class="euro-sign euro-left" style="top: 70%; animation-delay: 1s;">€</div>
+    <div class="euro-sign euro-right" style="top: 30%; animation-delay: 0s;">€</div>
+    <div class="euro-sign euro-right" style="top: 50%; animation-delay: 0.5s;">€</div>
+    <div class="euro-sign euro-right" style="top: 70%; animation-delay: 1s;">€</div>
+
+    <!-- Main content block -->
+    <div class="block center-block" style="max-width: 1100px; width: 100%;">
+        
+        <!-- Debt Table -->
+        <div class="below-block">
+            <h4 class="text-center mb-4 navbar-brand-text">Who Owes Whom – {{ tripname }}</h4>
+
+            {% if result %}
+                <div class="table-responsive">
+                    <table class="pink-table">
+                        <thead>
+                            <tr>
+                                <th>Debtor</th>
+                                <th>Creditor</th>
+                                <th>Amount (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for debtor, creditor, amount in result %}                
+                            <tr>
+                                <td>{{ debtor|title }}</td>
+                                <td>{{ creditor|title }}</td>
+                                <td>{{ '%.2f'|format(amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">No debts to settle – everyone's even!</div>
+            {% endif %}
+
+            <div class="bottom-center">
+                <a href="/transactions" class="btn btn-secondary shimmer-button mt-4">
+                    ← Back to Transactions
+                </a>
+            </div>
+        </div>
+
+        <!-- Moodboard -->
+        <div class="below-block mt-5">
+            <h4 class="text-center mb-4 navbar-brand-text">Trip Moodboard</h4>
+            <div class="three-pictures">
+                <img src="{{ url_for('static', filename='trixie.jpeg') }}" alt="Sunset">
+                <img src="{{ url_for('static', filename='GBH.jpeg') }}" alt="Shopping">
+                <img src="{{ url_for('static', filename='barbie.jpeg') }}" alt="Spa">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
