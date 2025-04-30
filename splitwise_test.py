@@ -1,5 +1,5 @@
 import pytest
-import splitwise 
+from splitwise import OptimalSplit
 
 #tests if the algorithm handles unexpected inputs correctly
 def exception_test():

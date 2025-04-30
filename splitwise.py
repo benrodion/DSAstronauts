@@ -1,6 +1,8 @@
 from collections import defaultdict
 from math import inf, isclose
+import heapq
 
+# in this script, I am trying to fix the issues the algorithm has with scaling 
 
 class OptimalSplit:
     """
@@ -20,81 +22,67 @@ class OptimalSplit:
 
         #creates score-dict. Keys: names of group members, Values: total amount owed/borrowed.
         for lender, borrower, amount in transactions:
-            score[lender] += amount
-            score[borrower] -= amount
+            score[lender] += float(amount)
+            score[borrower] -= float(amount)
 
 
-         # for us to check what's going on 
+         # to check if balances are correct. 
+         # output helps verify correctness of solution for simple transactions
         print(score)
 
 
         # remove settled accounts (accounts with balance = 0)
         debt = {person: amt for person, amt in score.items() if amt != 0}
-        people = list(debt.keys())
-        balances = list(debt.values())
 
         #to check that all accounts with balance 0 have been removed 
+        # output helps verify correctness of solution for simple transactions
         print(debt)
 
-        def dfs(start, balances, people):
-            # skip over people with balance == 0 (settled debts)
-            while start < len(balances) and abs(balances[start]) < 1e-9: # floating point safeguard 
-                start += 1
-            # base case: there are no balances to settle --> return 0 (0 payments need to be made) and empty list of transactions    
-            if start == len(balances):
-                return 0, []
-            #initialize minimum number of payments and optimal transaction list
-            min_payments = inf
-            best_path = []
+        #form priority queues to track who needs to give and receive
+        # format is tuple: (-amount, person)
+        debtors = []
+        creditors = []
 
-            # attempt debt settling by pairing balances[start] with each of the later people in the list 
-            for i in range(start + 1, len(balances)):
-                if balances[start] * balances[i] < 0:# ensures that only debtors & creditors can be paired, not debtor & debtor or creditor & creditor
-                    amount = min(abs(balances[start]), abs(balances[i]))#amount to be paid in the simulated transaction 
-                    #save balance-values for backtracing
-                    start_original = balances[start]
-                    i_original = balances[i]
+        # if the value is negative, the person is a debtor
+        # heapq -->  ensure that the person with the biggest balance sits on top of the heap, everything else is unsorted
+        for k, v in debt.items(): 
+            if v < 0: 
+                heapq.heappush(debtors, (-abs(v), k)) #heapq is a min-heap, so we need to work with negative values!
 
-                    # This block is mainly helpful for debugging with print-statements.
-                    # It determine direction of payment: from start to i or from i to start. 
-                    # It also simulates the payments for us to keep track of them. 
-                    if balances[start] < 0: #Case 1: if `start` owes money
-                        path = [(people[start], people[i], amount)]
-                        #reflect the changes of the transactions in the balances list 
-                        balances[i] -= amount
-                        balances[start] += amount
-                    else:  #Case 2: if `start` gets money
-                        path = [(people[i], people[start], amount)]
-                        balances[start] -= amount
-                        balances[i] += amount
+            elif v > 0: 
+                heapq.heappush(creditors, (-v, k))
 
-                    # determine whether to move to the next person or stay with 'start' depending on whether `start` has been settled
-                    if isclose(balances[start], 0, abs_tol= 1e-6): # Case 1: `start` is settled and we move on 
-                        next_start = start + 1
-                    else:
-                        next_start = start # Case 2: `start` is not settled and we stay with it 
+        # initialize empty results list --> will store lists of the format [creditor, debtor, amount]
+        best_path = []
 
-                    # recursive settlement of remaining debt 
-                    payments, next_path = dfs(next_start, balances[:], people)
-                    if payments + 1 < min_payments: # if path results in fewer payments than before, update best solution 
-                        min_payments = payments + 1
-                        best_path = path + next_path
+        # core of the algorithm: debt settlement 
+        while debtors: 
+            debtAmount, debtor = heapq.heappop(debtors) #take debtor with biggest debt from heap and remove
+            creditAmount, creditor = heapq.heappop(creditors) #take debtor with biggest debt from heap and remove
 
-                    # restore original balances for next depth-first search
-                    balances[start] = start_original
-                    balances[i] = i_original
-                
-            return min_payments, best_path
+            debtAmount = -debtAmount
+            creditAmount = -creditAmount
 
 
-            return min_payments, best_path
+            # Identify amount to be paid
+            payment = min(debtAmount, creditAmount)
+
+            #record payment 
+            path = [creditor, debtor, payment]
+
+            #update balances
+            debtAmount -= payment
+            creditAmount -= payment
+
+            #import: check if debtor/creditor still have open balances after the transaction
+            # if yes: add them back to the heap 
+            if debtAmount > 0: 
+                heapq.heappush(debtors, (-debtAmount, debtor))
+            elif creditAmount > 0:
+                heapq.heappush(creditors, (-creditAmount, creditor))
+
+            #add path to solution path
+            best_path.append(path)
 
 
-        # run recursive function starting from first unsettled person     
-        _, result = dfs(0, balances, people)
-        
-        return result
-    
-
-
-
+        return best_path
