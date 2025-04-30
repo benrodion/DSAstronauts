@@ -30,6 +30,7 @@
             color: #c04154 !important;
             font-family: 'Open Sans';
             font-weight: 600;
+            cursor: pointer;
         }
         .navbar-brand-text{
           text-transform: uppercase;
@@ -38,7 +39,7 @@
           font-family: 'Open Sans';
         }
         .nav-link:hover {
-            color: #bb1a1a !important;
+            color: red;
         }
         .container-blocks {
             display: flex;
@@ -54,7 +55,7 @@
             background: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 20px;
-            min-height: 800px;
+            min-height: 900px;
         }
         .center-block {
             flex: 2;
@@ -152,10 +153,12 @@
           max-width: 300px;
           margin: 0 auto;
         }
-
+        .body{
+            background-color: #eccfca;
+        }
     </style>
 </head>
-<body>
+<body class = "body">
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg">
@@ -166,13 +169,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-file-invoice-dollar"></span>Overview of Expenses</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-landmark"></span>Old Trips</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
-            </ul>
+              <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip here</a></li>
+              <li class="nav-item"><a class="nav-link" href="/transactions"><span class="fa-solid fa-file-invoice-dollar"></span>Add New Transaction</a></li>
+              <li class="nav-item"><a class="nav-link" href="/dashboard#previous-trips"><span class="fa-solid fa-landmark"></span>Old Trips</a></li>
+              <li class="nav-item"><a class="nav-link" href="/contact"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
+          </ul>
             <ul class="navbar-nav navbar-right">
-              <li class ="nav-item"></li><a class = "nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Login</a></li>
+              <li class ="nav-item"></li><a class = "nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Log out</a></li>
             </ul>
         </div>
     </div>
@@ -180,18 +183,21 @@
 
 <!-- Three Main Blocks -->
 <div class="container-blocks">
-    <div class="block">
-      <h6 class = "mb-0 pb-3"> <span>Trip Inspo</span></h6>
-      <br>
-      <img src="{{url_for('static', filename='cezanne.jpg')}}"
-      class = "image"/>
-      <br>
-      <img src="{{url_for('static', filename='skiGirl.jpg')}}"
-      class = "image"/>
-      <br>
-      <img src="{{url_for('static', filename='cake.jpg.avif')}}"
-      class = "image"/>
-    </div>
+  <div class="block">
+    <h6 class = "mb-0 pb-3"> <span>Trip Inspo</span></h6>
+    <br>
+    <br>
+    <img src="{{url_for('static', filename='cezanne.jpg')}}"
+    class = "image"/>
+    <br>
+    <br>
+    <img src="{{url_for('static', filename='skiGirl.jpg')}}"
+    class = "image"/>
+    <br>
+    <br>
+    <img src="{{url_for('static', filename='cake.jpg.avif')}}"
+    class = "image"/>
+  </div>
     <div class="block center-block">
       <h6 class="mb-0 pb-3"> <span>Create a trip by selecting a trip type and inputting a trip name</span></h6> 
     
@@ -260,11 +266,14 @@
     
     <div class="block">
       <h6 class = "mb-0 pb-3"> <span>Or maybe something like this?</span></h6>
+      <br>
       <img src="{{url_for('static', filename='Winx_Club.jpg')}}"
       class = "image"/>
       <br>
+      <br>
       <img src="{{url_for('static', filename='france.jpg')}}"
       class = "image"/>
+      <br>
       <br>
       <img src="{{url_for('static', filename='pizza.jpg')}}"
       class = "image"/>

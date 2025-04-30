@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <!-- FontAwesome -->
+    <script src="https://kit.fontawesome.com/aabba25cda.js" crossorigin="anonymous"></script>
+
+    <title>Styled Page with Navbar</title>
+
+    <style>
+        .employee-card {
+            background-color: #f9e5e3; 
+        }
+
+        .navbar {
+            background-color: #f0e9e8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px 0; 
+            max-height: 56px;
+        }
+
+        .navbar-brand, .nav-link {
+            color: #c04154 !important;
+            font-family: 'Open Sans';
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .navbar-brand-text {
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #c04154 !important;
+            font-family: 'Open Sans';
+        }
+
+        .nav-link:hover {
+            color: #bb1a1a !important;
+        }
+
+        .container-blocks {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px;
+            background-color: #eccfca;
+        }
+
+        .block {
+            flex: 1;
+            padding: 30px;
+            margin: 20px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            min-height: 1800px;
+            overflow: hidden; 
+        }
+
+        .inner-block {
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center; 
+        }
+
+        .bottom-center {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .image {
+            width: 200px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .imageBig {
+            height: 300px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #tripSelection {
+            appearance: none;
+            background-color: white;
+            color: black;
+            font-weight: normal;
+            border: 1px solid #c04154;
+            padding: 8px;
+        }
+
+        .select {
+            font-family: 'Font Awesome 5 Free', 'arial'
+        }
+
+        .trip-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .trip-item {
+            background-color: #f9e5e3;
+            border: 1px solid #c04154;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .trip-form {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trip-label {
+            color: #c04154;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .trip-button {
+            background-color: white;
+            color: #c04154;
+            border: 1px solid #c04154;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .trip-button:hover {
+            background-color: #c04154;
+            color: white;
+        }
+
+        .body {
+            background-color: #eccfca;
+        }
+
+        .employee-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            grid-gap: 30px;
+            align-items: start;
+            position: relative;
+        }
+
+        .employee-card {
+            position: relative;
+            z-index: 1;
+        }
+
+        .employee-card:nth-child(2) {
+            top: 100px; /* Employee 2 moves down */
+        }
+
+        .employee-card:nth-child(3) {
+            top: 50px; /* Employee 3 moves down */
+        }
+
+        .employee-card:nth-child(4) {
+            top: 150px; /* Employee 4 moves down */
+        }
+
+        .employee-card:nth-child(5) {
+            top: 100px; /* Employee 5 moves down */
+        }
+
+        .employee-card:nth-child(6) {
+            top: 200px; /* Employee 6 moves down */
+        }
+
+        .employee-card:nth-child(7) {
+            top: 150px; /* Employee 7 moves down */
+        }
+        .employee-card:nth-child(8) {
+            top: 250px; /* Employee 7 moves down */
+        }
+
+    </style>
+</head>
+<body class="body">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="#"><span class="fa-solid fa-calculator"></span>Girl Math</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
+                <li class="nav-item"><a class="nav-link" href="/transactions"><span class="fa-solid fa-file-invoice-dollar"></span>Add New Transaction</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard#previous-trips"><span class="fa-solid fa-landmark"></span>Old Trips</a></li>
+                <li class="nav-item"><a class="nav-link" href="/contact"><span class="fa-solid fa-pen-nib"></span>Contact</a></li>
+            </ul>
+            <ul class="navbar-nav navbar-right">
+                <li class="nav-item"></li><a class="nav-link" href="/"><span class="fas fa-door-open pe-2"></span>Log out</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-blocks flex-column">
+    <div class="block text-center">
+      <h2 class="navbar-brand-text">Contact Our Team</h2>
+      <p class="mt-3">Get to know the amazing team behind Girl Math! We are seven data scientists in training with a passion for fun, adventure, and math (obv). Our mission is to make your trips as easy as possible. Tips or general ideas are always appreciated, so feel free to reach out.</p>
+      <p><strong>Email:</strong> contact@girlmath.com | <strong>Phone:</strong> +1 (555) 123-4567</p>
+  
+      <!-- Employee Grid Inside Main Block -->
+        <div class="employee-cards">
+            <!-- Employee 1 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member1.jpg') }}" class="image mb-2" alt="Member 1">
+                <h5 class="navbar-brand-text">Benedict Anderer</h5>
+                <p class="text-muted">Algorithm Afficionado</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“Booking a trip a year in advance, means it's free when you go on the trip.”</p>
+                </blockquote>
+            </div>
+  
+            <!-- Employee 2 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member2.jpg') }}" class="image mb-2" alt="Member 2">
+                <h5 class="navbar-brand-text">Sofiya Berdiyeva</h5>
+                <p class="text-muted">Debugger Dorado</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“Design is intelligence made visible.”</p>
+                </blockquote>
+            </div>
+  
+            <!-- Employee 3 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member3.jpg') }}" class="image mb-2" alt="Member 3">
+                <h5 class="navbar-brand-text">Mona Borth</h5>
+                <p class="text-muted">Backend Badass</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“If it is on sale, you're making a profit.”</p>
+                </blockquote>
+            </div>
+  
+            <!-- Employee 4 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member4.jpg') }}" class="image mb-2" alt="Member 4">
+                <h5 class="navbar-brand-text">Polina Ianina</h5>
+                <p class="text-muted">Scrum Specialist</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“If you pay with cash, it is free.”</p>
+                </blockquote>
+            </div>
+  
+            <!-- Employee 5 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member5.jpg') }}" class="image mb-2" alt="Member 5">
+                <h5 class="navbar-brand-text">Jasmin Mehnert</h5>
+                <p class="text-muted">Product Pirate</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“Connection is the new currency.”</p>
+                </blockquote>
+            </div>
+  
+            <!-- Employee 6 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member6.jpg') }}" class="image mb-2" alt="Member 6">
+                <h5 class="navbar-brand-text">Louisa Stuhrman</h5>
+                <p class="text-muted">Backend Badass</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“Plans are nothing. Planning is everything.”</p>
+                </blockquote>
+            </div>
+
+            <!-- Employee 7 -->
+            <div class="employee-card text-center">
+                <img src="{{ url_for('static', filename='member7.jpg') }}" class="image mb-2" alt="Member 7">
+                <h5 class="navbar-brand-text">Franka Tetteroo</h5>
+                <p class="text-muted">Display Diva</p>
+                <blockquote class="blockquote">
+                    <p class="mb-0">“Buying a 500€ purse that I wear every day of the year, means it's really 1.37€ per use.”</p>
+                </blockquote>
+            </div>
+                
+            <!-- Employee 7 -->
+            <div class="employee-card text-center">
+                    <img src="{{ url_for('static', filename='member8.jpg') }}" class="image mb-2" alt="Logo">
+                    <h5 class="navbar-brand-text"></h5>
+                    <p class="text-muted"></p>
+                    <blockquote class="blockquote">
+                        <p class="mb-0"></p>
+                </blockquote>
+                <br>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
