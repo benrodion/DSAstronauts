@@ -1,5 +1,6 @@
 from typing import Optional, List, Union
 from database import SessionLocal, Transaction, Participant
+import random
 
 def check_bad_password(password: str) -> Optional[str]:
     """
@@ -45,3 +46,22 @@ def prepare_transactions_for_split(trip_id: int) -> List[List[Union[str, float]]
 
     db.close()
     return result
+
+
+# generate artificial transactions for testing the algorithm 
+def generate_transactions(num_people, num_transactions_per_person=10, max_amount=100):
+    """
+    Generate a list of transactions of the form [lender, borrower, amount].
+
+    Args:
+      - num_people: how many unique people (named "P0", "P1", …).
+      - num_transactions_per_person: average number of transactions per person.
+      - max_amount: upper bound for a single transaction’s amount.
+    """
+    people = [f"P{i}" for i in range(num_people)]
+    transactions = []
+    for _ in range(num_people * num_transactions_per_person):
+        lender, borrower = random.sample(people, 2)
+        amount = round(random.uniform(1, max_amount), 2)
+        transactions.append([lender, borrower, amount])
+    return transactions
