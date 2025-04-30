@@ -56,7 +56,7 @@ class OptimalSplit:
         best_path = []
 
         # core of the algorithm: debt settlement 
-        while debtors: 
+        while len(debtors) > 0: 
             debtAmount, debtor = heapq.heappop(debtors) #take debtor with biggest debt from heap and remove
             creditAmount, creditor = heapq.heappop(creditors) #take debtor with biggest debt from heap and remove
 
