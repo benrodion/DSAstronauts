@@ -599,6 +599,9 @@ def calculate_split():
 
     return render_template("calculate.html", result=result, tripname=tripname)
 
+@app.route('/contact', methods=["GET"])
+def contact():
+    return render_template('contact.html')
 
 if __name__ == "__main__":
     print("✅ Starting Flask app...")
