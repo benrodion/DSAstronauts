@@ -40,11 +40,10 @@
             padding: 10px 0; /* Reduce navbar padding */
             max-height: 56px; /* Standard Bootstrap height */
         }
-        .navbar-brand, .nav-link {
+        .navbar-brand {
             color: #c04154;
             font-family: 'Open Sans';
             font-weight: 600;
-            cursor: pointer;
         }
         .navbar-brand-text{
           text-transform: uppercase;
@@ -59,6 +58,12 @@
         }
         .nav-link:hover {
             color: red;
+        }
+        .nav-item, .nav-link{
+            color: #c04154;
+            font-family: 'Open Sans';
+            font-weight: 600;
+            cursor: pointer;
         }
         .block{
             background-color: #eccfca;
@@ -88,9 +93,6 @@
 <nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="#"><span class="fa-solid fa-calculator"></span>Girl Math</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
@@ -457,7 +459,7 @@ function addParticipant() {
             const name = this.getAttribute('data-name');
             
             document.getElementById('delete_transaction_name').textContent = name;
-            document.getElementById('deleteTransactionForm').action = `/transactions/delete/€{id}`;
+            document.getElementById('deleteTransactionForm').action = `/transactions/delete/${id}`;
         });
     });
     
