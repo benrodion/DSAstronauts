@@ -241,7 +241,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for debtor, creditor, amount in result %}                
+                            {% for creditor, debtor, amount in result %}                
                             <tr>
                                 <td>{{ debtor|title }}</td>
                                 <td>{{ creditor|title }}</td>
