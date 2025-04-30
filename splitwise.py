@@ -28,7 +28,7 @@ class OptimalSplit:
 
          # to check if balances are correct. 
          # output helps verify correctness of solution for simple transactions
-        print(score)
+        #print(score)
 
 
         # remove settled accounts (accounts with balance = 0)
@@ -36,7 +36,7 @@ class OptimalSplit:
 
         #to check that all accounts with balance 0 have been removed 
         # output helps verify correctness of solution for simple transactions
-        print(debt)
+        #print(debt)
 
         #form priority queues to track who needs to give and receive
         # format is tuple: (-amount, person)
