@@ -2,6 +2,12 @@ from typing import Optional, List, Union
 from database import SessionLocal, Transaction, Participant
 
 def check_bad_password(password: str) -> Optional[str]:
+    """
+    Checks if a password passes conditions
+    Returns:
+        None: if the password passes
+        Error message (String): if the password fails
+    """
     if len(password) < 4:
         return "Password must be at least 4 characters."
     if ' ' in password:
