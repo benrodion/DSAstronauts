@@ -37,13 +37,25 @@
         .navbar {
             background-color: #f0e9e8;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            padding: 10px 0; /* Reduce navbar padding */
-            max-height: 56px; /* Standard Bootstrap height */
+            padding: 10px 0; 
+            max-height: 56px; 
         }
-        .navbar-brand, .nav-link {
+        .nav-link {
+    color: #c04154 !important;
+    font-family: 'Open Sans';
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: red !important;
+    cursor: pointer;
+}
+        .navbar-brand {
             color: #c04154 !important;
             font-family: 'Open Sans';
             font-weight: 600;
+            pointer-events: none; 
         }
         .navbar-brand-text{
           text-transform: uppercase;
@@ -56,36 +68,37 @@
           color: #c04154 !important;
           font-family: 'Open Sans';
         }
-        .nav-link:hover {
-            color: #bb1a1a !important;
-        }
+
         .block{
             background-color: #eccfca;
         }
         .column {
-            float:left;
+            float:right;
             width:33.33%;
             padding:5px;
         }
         .row::after {
             content: "";
             clear: both;
-            display: table;
+            display: flex;
         }
         .image {
-          width: 500px;
-          height: 300px;
+          width: 400px;
+          height: 250px;
           object-fit: cover;
           display: block;
           margin-left: auto;
           margin-right: auto;
         }
+        .body{
+            background-color: #eccfca;
+        }
     </style>
 </head>
-<body>
+<body class = "body">
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand-text"><span class="fa-solid fa-calculator"></span>Girl Math</a>
+            <a class="navbar-brand"><span class="fa-solid fa-calculator"></span>Girl Math</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="/dashboard"><span class="fa-solid fa-plane-departure"></span>Create a new trip</a></li>
