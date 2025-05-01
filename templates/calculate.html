@@ -17,33 +17,29 @@
     <title>Styled Page with Navbar</title>
 
     <style>
-        /* Shimmer animation */
+        .pink-button {
+    background-color: hotpink;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-family: 'Open Sans';
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+.pink-button:hover {
+    background-color: #ff69b4;
+    color: white;
+}
+
         .shimmer-button {
             position: relative;
             overflow: hidden;
         }
     
-        .shimmer-button::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -75%;
-            height: 100%;
-            width: 50%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-            animation: shimmer 2s infinite;
-        }
-    
-        @keyframes shimmer {
-            0% {
-                left: -75%;
-            }
-            100% {
-                left: 125%;
-            }
-        }
-    
-        /* Table styling */
+
         .pink-table {
             border: 3px solid hotpink; 
             width: 100%;
@@ -78,27 +74,35 @@
             border-radius: 12px;
             object-fit: cover;
         }
-                /* Make Navbar Follow styles.css Theme */
+        .nav-link {
+    color: hotpink;
+    font-family: 'Open Sans';
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+.nav-link:hover {
+    color: palevioletred;
+    cursor: pointer;
+}
+.navbar-brand {
+    color: hotpink;
+    font-family: 'Open Sans';
+    font-weight: 600;
+    cursor: default;
+    pointer-events: none; 
+}
                 .navbar {
                 background-color: #f0e9e8;
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
                 padding: 10px 0; /* Reduce navbar padding */
                 max-height: 56px; /* Standard Bootstrap height */
             }
-            .navbar-brand, .nav-link {
-                color: hotpink;
-                font-family: 'Open Sans';
-                font-weight: 600;
-                cursor: pointer;
-            }
+
             .navbar-brand-text{
               text-transform: uppercase;
               font-weight: 700;
               color: hotpink !important;
               font-family: 'Open Sans';
-            }
-            .nav-link:hover {
-                color: palevioletred;
             }
             .container-blocks {
                 display: flex;
@@ -157,7 +161,7 @@
             .body{
                 background-color: #eccfca;
                 }
-            /* Euro Sign shimmer effect */
+            
         .euro-sign {
             font-size: 48px;
             color: hotpink;
@@ -258,7 +262,7 @@
             {% endif %}
 
             <div class="bottom-center">
-                <a href="/transactions" class="btn btn-secondary shimmer-button mt-4">
+                <a href="/transactions" class="btn shimmer-button pink-button mt-4"">
                     ← Back to Transactions
                 </a>
             </div>
