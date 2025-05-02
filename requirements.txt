@@ -1,0 +1,9 @@
+pytest
+pytest-mock
+sqlalchemy
+flask
+flask-wtf
+flask-session
+bcrypt
+werkzeug
+wtforms
