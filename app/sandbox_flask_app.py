@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, redirect, session, jsonify, flash, url_for
+from flask import render_template, request, redirect, session, jsonify, flash, url_for
 from app.database import SessionLocal, Group, Trip, Transaction, Participant 
 from flask_session import Session
 import bcrypt
-from app.helpers import check_bad_password, prepare_transactions_for_split
-from sqlalchemy import distinct
+from app.helpers import check_bad_password, prepare_transactions_for_split, normalize_name, update_session_names
 from app.forms import *
-from flask_wtf import CSRFProtect
 from app.splitwise import OptimalSplit
 from app import app 
+
+app.secret_key = 'keyyyy'
+
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 @app.route('/', methods=["GET", "POST"])
 def show_login_page():
@@ -109,59 +113,6 @@ def dashboard():
 
     db.close()
     return render_template('dashboard.html', previous_trips=previous_trips, trip_form=trip_form)
-
-def normalize_name(name, name_lookup=None):
-    """
-    Normalize a name consistently.
-    If name exists in lookup, use that canonical version.
-    Otherwise, properly capitalize the name.
-    """
-    # Clean the input
-    cleaned_name = name.strip()
-    if not cleaned_name:
-        return cleaned_name
-        
-    # Check for existing canonical version
-    if name_lookup:
-        lower_name = cleaned_name.lower()
-        if lower_name in name_lookup:
-            return name_lookup[lower_name]
-    
-    # For new names, ensure consistent capitalization
-    # (capitalize first letter of each word)
-    return " ".join(word.capitalize() for word in cleaned_name.split())
-
-def update_session_names(db, session, trip_id):
-    """
-    Completely rebuild the session name lists from the database
-    to ensure consistency.
-    """
-    # Query all unique participants and payers from the database for this trip
-    participants_query = (
-        db.query(Participant.name)
-        .join(Transaction, Participant.trans_id == Transaction.trans_id)
-        .filter(Transaction.trip_id == trip_id)
-        .distinct()
-    )
-    
-    payers_query = (
-        db.query(Participant.name)
-        .join(Transaction, Participant.trans_id == Transaction.trans_id)
-        .filter(Transaction.trip_id == trip_id, Participant.is_payer == True)
-        .distinct()
-    )
-    
-    # Get results as lists of names
-    all_participants = [p[0] for p in participants_query.all()]
-    all_payers = [p[0] for p in payers_query.all()]
-    
-    # Update session with fresh data
-    session["unique_participants"] = all_participants
-    session["unique_payers"] = all_payers
-    
-    # Return the name lists for immediate use
-    return all_participants, all_payers
-
 
 @app.route('/transactions', methods=['GET', 'POST'])
 def transactions():
