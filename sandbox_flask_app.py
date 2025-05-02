@@ -5,7 +5,6 @@ from database import SessionLocal, Group, Trip, Transaction, Participant
 from flask_session import Session
 import bcrypt
 from helpers import check_bad_password
-#from sqlalchemy import distinct
 from forms import *
 from flask_wtf import CSRFProtect
 from splitwise import OptimalSplit
