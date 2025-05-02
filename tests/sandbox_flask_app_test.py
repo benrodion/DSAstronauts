@@ -1,7 +1,7 @@
 import pytest
 from pytest_mock import MockFixture
-from sandbox_flask_app import app, Group
-from database import SessionLocal
+from app.sandbox_flask_app import app, Group
+from app.database import SessionLocal
 import bcrypt
 
 @pytest.fixture

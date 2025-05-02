@@ -1,4 +1,4 @@
-from helpers import check_bad_password
+from app.helpers import check_bad_password
 
 def test_check_bad_password():
     

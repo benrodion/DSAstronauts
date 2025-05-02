@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 
-from database import Base, Group, Trip, Transaction, Participant  # update if your file has a different name
+from app.database import Base, Group, Trip, Transaction, Participant  # update if your file has a different name
 
 # Use in-memory SQLite for testing (doesn't create actual file)
 TEST_DATABASE_URL = "sqlite:///:memory:"

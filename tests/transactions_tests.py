@@ -1,13 +1,13 @@
 import pytest
 from pytest_mock import MockFixture
-from sandbox_flask_app import app, Group
-from database import SessionLocal
+from app.sandbox_flask_app import app, Group
+from app.database import SessionLocal
 import bcrypt
 from flask import session, url_for
 from werkzeug.datastructures import ImmutableMultiDict
-from sandbox_flask_app import app, normalize_name, update_session_names
-from database import Transaction, Participant, Trip
-from forms import AddTransactionForm, EditTransactionForm, DeleteTransactionForm
+from app.sandbox_flask_app import app, normalize_name, update_session_names
+from app.database import Transaction, Participant, Trip
+from app.forms import AddTransactionForm, EditTransactionForm, DeleteTransactionForm
 
 @pytest.fixture
 def client():
