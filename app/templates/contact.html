@@ -70,7 +70,7 @@
             background: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 20px;
-            min-height: 2300px;
+            min-height: 2400px;
             overflow: hidden; 
         }
 
@@ -89,7 +89,7 @@
         }
 
         .image {
-            width: 200px;
+            height: 280px;
             display: block;
             margin-left: auto;
             margin-right: auto;
@@ -164,7 +164,7 @@
 
         .employee-cards {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            grid-template-columns: repeat(2, 1fr); 
             grid-gap: 30px;
             align-items: start;
             position: relative;
@@ -173,6 +173,9 @@
         .employee-card {
             position: relative;
             z-index: 1;
+            height: 450px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
         }
 
         .employee-card:nth-child(2) {
@@ -231,17 +234,18 @@
     <div class="block text-center">
       <h2 class="navbar-brand-text">Contact Our Team</h2>
       <p class="mt-3">Get to know the amazing team behind Girl Math! We are a start-up with seven amazing data scientists in training who share a passion for fun, adventure, and math (obv). Our mission is to make your trips as easy as possible. Tips or general ideas are always appreciated, so feel free to reach out.</p>
-      <p><strong>Email:</strong> contact@girlmath.com | <strong>Phone:</strong> +1 (555) 123-4567</p>
+      <p><strong>Email:</strong> contact@girlmath.com | <strong>Phone:</strong> +49 030 2592190</p>
   
       <!-- Employee Grid Inside Main Block -->
         <div class="employee-cards">
             <!-- Employee 1 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
-                <img src="{{ url_for('static', filename='member1.jpg') }}" class="image mb-2" alt="Member 1">
+                <br>
+                <img src="{{ url_for('static', filename='BEN.jpeg') }}" class="image mb-2" alt="Member 1">
                 <h5 class="navbar-brand-text">Benedict Anderer</h5>
-                <p class="text-muted">Algorithm Afficionado</p>
-                <p class="text-muted">B.Anderer@girlmathcom</p>
+                <p class="text-muted">Algorithm Afficionado <br> B.Anderer@girlmath.com</p>
+                <p class="text-muted"></p>
                 <blockquote class="blockquote">
                     <p class="mb-0">“Booking a trip a year in advance, means it's free when you go on the trip.”</p>
                 </blockquote>
@@ -250,22 +254,23 @@
             <!-- Employee 2 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
+                <br>
                 <img src="{{ url_for('static', filename='sofiya.jpeg') }}" class="image mb-2" alt="Member 2">
                 <h5 class="navbar-brand-text">Sofiya Berdiyeva</h5>
-                <p class="text-muted">Debugger Dorado</p>
-                <p class="text-muted">S.Berdiyeva@girlmathcom</p>
+                <p class="text-muted">Debugger Dorado <br> S.Berdiyeva@girlmath.com</p>
+                <p class="text-muted"></p>
                 <blockquote class="blockquote">
-                    <p class="mb-0">“Investing in a birking bag is way smarter than investing in stocks.”</p>
+                    <p class="mb-0">“Some kinds of simplicity cost more than others." (Pratchett)</p>
                 </blockquote>
             </div>
   
             <!-- Employee 3 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
+                <br>
                 <img src="{{ url_for('static', filename='mona_smurf.jpeg') }}" class="image mb-2" alt="Member 3">
                 <h5 class="navbar-brand-text">Mona Borth</h5>
-                <p class="text-muted">Backend Badass</p>
-                <p class="text-muted">M.Borth@girlmathcom</p>
+                <p class="text-muted">Backend Badass <br>M.Borth@girlmath.com</p>
                 <blockquote class="blockquote">
                     <p class="mb-0">“If it is on sale, you're making a profit.”</p>
                 </blockquote>
@@ -274,58 +279,61 @@
             <!-- Employee 4 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
-                <img src="{{ url_for('static', filename='member4.jpg') }}" class="image mb-2" alt="Member 4">
+                <br>
+                <img src="{{ url_for('static', filename='polina.jpeg') }}" class="image mb-2" alt="Member 4">
                 <h5 class="navbar-brand-text">Polina Ianina</h5>
-                <p class="text-muted">Scrum Specialist</p>
-                <p class="text-muted">P.Ianina@girlmathcom</p>
+                <p class="text-muted">Scrum Specialist <br> P.Ianina@girlmath.com</p>
                 <blockquote class="blockquote">
-                    <p class="mb-0">“If you pay with cash, it is actually free.”</p>
+                    <p class="mb-0">"Investing in a Birkin bag is way smarter than investing in stocks.”</p>
                 </blockquote>
             </div>
   
             <!-- Employee 5 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
-                <img src="{{ url_for('static', filename='member5.jpg') }}" class="image mb-2" alt="Member 5">
+                <br>
+                <img src="{{ url_for('static', filename='jasmin.png') }}" class="image mb-2" alt="Member 5">
                 <h5 class="navbar-brand-text">Jasmin Mehnert</h5>
-                <p class="text-muted">Product Pirate</p>
-                <p class="text-muted">J.Mehnert@girlmathcom</p>
+                <p class="text-muted">Product Pirate <br> J.Mehnert@girlmath.com</p>
+                <p class="text-muted"></p>
                 <blockquote class="blockquote">
-                    <p class="mb-0">“Money can't buy hapiness, but it can buy shoes and that's basically the same”</p>
+                    <p class="mb-0">“Money can't buy hapiness, but it can buy shoes and that's basically the same.”</p>
                 </blockquote>
             </div>
   
             <!-- Employee 6 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
-                <img src="{{ url_for('static', filename='member6.jpg') }}" class="image mb-2" alt="Member 6">
-                <h5 class="navbar-brand-text">Louisa Stuhrman</h5>
-                <p class="text-muted">Backend Badass</p>
-                <p class="text-muted">L.Stuhrman@girlmathcom</p>
+                <br>
+                <img src="{{ url_for('static', filename='luisa.jpeg') }}" class="image mb-2" alt="Member 6">
+                <h5 class="navbar-brand-text">Luisa Stuhrman</h5>
+                <p class="text-muted">Backend Badass<br> L.Stuhrman@girlmath.com</p>
+                <p class="text-muted"></p>
                 <blockquote class="blockquote">
-                    <p class="mb-0">“Girl math is only spending €10 because you returned a €20 item and bought a €30 one.”.”</p>
+                    <p class="mb-0">“Girl math is only spending €10 because you returned a €20 item and bought a €30 one.”</p>
                 </blockquote>
             </div>
 
             <!-- Employee 7 -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
-                <img src="{{ url_for('static', filename='franka.png') }}" class="image mb-2" alt="Member 7">
+                <br>
+                <img src="{{ url_for('static', filename='franka2.png') }}" class="image mb-2" alt="Member 7">
                 <h5 class="navbar-brand-text">Franka Tetteroo</h5>
-                <p class="text-muted">Display Diva</p>
-                <p class="text-muted">F.Tetteroo@girlmathcom</p>
+                <p class="text-muted">Display Diva<br> F.Tetteroo@girlmath.com</p>
+                <p class="text-muted"></p>
                 <blockquote class="blockquote">
                     <p class="mb-0">“Buying a 500€ purse that I wear every day of the year, means it's really 1.37€ per use.”</p>
                 </blockquote>
             </div>
                 
-            <!-- LOGO -->
+            <!-- MERCHE -->
             <div class="employee-card text-center">
                 <h5 class="navbar-brand-text"></h5>
                 <br>
                 <h5 class="navbar-brand-text">New Merch Dropping Soon!</h5>
                 <br>
-                    <img src="{{ url_for('static', filename='merge.webp') }}" class="image mb-2" alt="Logo">
+                    <img src="{{ url_for('static', filename='merche.webp') }}" class="image mb-2" alt="Logo">
                     <p class="text-muted"></p>
                     <blockquote class="blockquote">
                         <p class="mb-0"></p>
