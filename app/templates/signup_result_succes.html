@@ -26,9 +26,9 @@ body, html {
 }
 
 .message {
-    font-size: 10vw;
+    font-size: 9vw;
     color: #ff69b4;
-    font-weight: 600;
+    font-weight: 900;
     text-transform: uppercase;
     text-shadow: 0 0 5px #fff, 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 40px #ff69b4;
     animation: sparkle 1.5s infinite;
@@ -144,15 +144,12 @@ body, html {
 							<span class="material-icons arrow-icon arrow-bottom-right">arrow_upward</span>
 							<h2 class="message">{{ message }}</h2>
 							<div class="login-redirect">
-								<span class="login-text">go back to login<span class="material-icons login-arrow">arrow_forward</span></span>
+								<span class="login-text">time to login<span class="material-icons login-arrow">arrow_forward</span></span>
 								<a href="/">
 									<img src="{{ url_for('static', filename='friends.webp') }}" alt="Login" class="login-img">
 								</a>
 							</div>
 						</div>						
-                        {% if name %}
-                        <h1 class="welcome-text">Welcome, {{ name }}!</h1>
-                        {% endif %}
 			      	</div>
 		      	</div>
 	      	</div>
