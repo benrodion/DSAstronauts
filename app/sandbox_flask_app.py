@@ -68,7 +68,7 @@ def signup():
         db.commit()
         db.close()
 
-        return render_template('signup_result.html', message="Sign-up successful!")
+        return render_template('signup_result_succes.html', message="Sign-up successful!")
     
     else:
         return render_template('login.html')
