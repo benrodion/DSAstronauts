@@ -548,6 +548,6 @@ def calculate_split():
 def contact():
     return render_template('contact.html')
 
-if __name__ == "__main__":
-    print("✅ Starting Flask app...")
-    app.run(debug=True, use_reloader=False)
+#if __name__ == "__main__":
+    #print("✅ Starting Flask app...")
+    #app.run(debug=True, use_reloader=False)
