@@ -1,13 +1,13 @@
 import pytest
 from pytest_mock import MockFixture
-from sandbox_flask_app import app, Group
-from database import SessionLocal
+from app.sandbox_flask_app import app, Group
+from app.database import SessionLocal
 import bcrypt
 from flask import session, url_for
 from werkzeug.datastructures import ImmutableMultiDict
-from sandbox_flask_app import app, normalize_name, update_session_names
-from database import Transaction, Participant, Trip
-from forms import AddTransactionForm, EditTransactionForm, DeleteTransactionForm
+from app.sandbox_flask_app import app, normalize_name, update_session_names
+from app.database import Transaction, Participant, Trip
+from app.forms import AddTransactionForm, EditTransactionForm, DeleteTransactionForm
 
 @pytest.fixture
 def client():
@@ -139,7 +139,7 @@ def test_update_session_names(mock_db, mocker):
 @pytest.fixture
 def mock_db(mocker):
     """Mock database session"""
-    mock_session = mocker.patch('sandbox_flask_app.SessionLocal')
+    mock_session = mocker.patch('app.sandbox_flask_app.SessionLocal')
     mock_instance = mocker.MagicMock()
     mock_session.return_value = mock_instance
     return mock_instance
@@ -183,7 +183,7 @@ def test_add_transaction_route(client, mock_db, mocker):
     }
 
     # Patch the function in sandbox_flask_app module
-    mocker.patch('sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
+    mocker.patch('app.sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
     response = client.post('/transactions/add', data=form_data)
 
     assert response.status_code == 302
@@ -212,7 +212,7 @@ def test_add_transaction_with_custom_payer(client, mock_db, mocker):
         'participants_names': ''
     }
 
-    mocker.patch('sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob', 'Charlie'], ['John', 'Alice', 'Charlie']))
+    mocker.patch('app.sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob', 'Charlie'], ['John', 'Alice', 'Charlie']))
     response = client.post('/transactions/add', data=form_data)
 
     assert response.status_code == 302
@@ -258,7 +258,7 @@ def test_edit_transaction_route(client, mock_db, mocker):
     mock_db.close.reset_mock()
     
     # Mock update_session_names to avoid database queries
-    mocker.patch('sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
+    mocker.patch('app.sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
     
     # Making an initial GET request to edit page
     client.get('/transactions/edit/1')
@@ -350,7 +350,7 @@ def test_complete_transaction_workflow(client, mock_db, mocker):
         })
 
     # Mock the update_session_names function
-    mocker.patch('sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
+    mocker.patch('app.sandbox_flask_app.update_session_names', return_value=(['John', 'Alice', 'Bob'], ['John', 'Alice']))
 
     # Add transaction
     # Configure mock_db.add to capture the Transaction object

@@ -1,5 +1,5 @@
 from typing import Optional, List, Union
-from database import SessionLocal, Transaction, Participant
+from app.database import SessionLocal, Transaction, Participant
 import random
 
 def check_bad_password(password: str) -> Optional[str]:

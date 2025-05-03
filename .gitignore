@@ -16,3 +16,6 @@ venv/
 # System files (Mac & Windows)
 .DS_Store
 Thumbs.db
+
+# session files
+flask_session/

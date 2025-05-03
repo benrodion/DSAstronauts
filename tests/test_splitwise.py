@@ -1,5 +1,5 @@
-from splitwise import OptimalSplit
-from helpers import generate_transactions
+from app.splitwise import OptimalSplit
+from app.helpers import generate_transactions
 import time
 
 def test_functionality():

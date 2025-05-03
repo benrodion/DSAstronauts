@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, redirect, session, jsonify, flash, url_for
-from database import SessionLocal, Group, Trip, Transaction, Participant 
+from flask import render_template, request, redirect, session, jsonify, flash, url_for
+from app.database import SessionLocal, Group, Trip, Transaction, Participant 
 from flask_session import Session
 import bcrypt
-from helpers import check_bad_password
-from forms import *
-from flask_wtf import CSRFProtect
-from splitwise import OptimalSplit
-from helpers import prepare_transactions_for_split, normalize_name, update_session_names
+from app.helpers import check_bad_password, prepare_transactions_for_split, normalize_name, update_session_names
+from app.forms import *
+from app.splitwise import OptimalSplit
+from app import app 
 
-app = Flask(__name__)  # create the instance of the flask class
 app.secret_key = 'keyyyy'
 
 app.config["SESSION_PERMANENT"] = False
