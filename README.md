@@ -51,11 +51,6 @@
    flask run
    ```
 
-Thanks for the second screenshot — now it's 100% clear: GitHub is collapsing the directory tree into a single line because it's not inside a properly fenced **code block**.
-
-Right now your Markdown probably looks like this (incorrect):
-
-
 ```markdown
 ## 🔍 Project Structure
 
