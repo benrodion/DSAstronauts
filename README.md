@@ -55,19 +55,19 @@
 
 
 DSAstronauts/
-├── app/               # Main Flask app code
-│   ├── routes.py      # URL routing and logic
-│   ├── database.py    # DB models and setup
-│   ├── splitwise.py   # Expense-splitting logic
-│   ├── forms.py       # WTForms definitions
-│   ├── helpers.py     # Utility functions
-│   ├── templates/     # HTML templates (Jinja2)
-│   └── static/        # CSS/JS and assets
-├── tests/             # Unit and integration tests
-├── requirements.txt   # Python dependencies
-├── README.md          # Project overview
-├── LICENSE            # MIT License
-└── .github/           # GitHub Actions or config
+|- app/
+|  |- routes.py
+|  |- database.py
+|  |- splitwise.py
+|  |- forms.py
+|  |- helpers.py
+|  |- templates/
+|  |- static/
+|- tests/
+|- requirements.txt
+|- README.md
+|- LICENSE
+|- .github/
 
 
 ## 🧪 Testing
