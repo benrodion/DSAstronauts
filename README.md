@@ -53,7 +53,7 @@
 
 ## 🔍 Project Structure
 
-```
+
 DSAstronauts/
 ├── app/               # Main Flask app code
 │   ├── routes.py      # URL routing and logic
@@ -68,7 +68,6 @@ DSAstronauts/
 ├── README.md          # Project overview
 ├── LICENSE            # MIT License
 └── .github/           # GitHub Actions or config
-```
 
 ## 🧪 Testing
 
