@@ -51,24 +51,33 @@
    flask run
    ```
 
+Thanks for the second screenshot — now it's 100% clear: GitHub is collapsing the directory tree into a single line because it's not inside a properly fenced **code block**.
+
+Right now your Markdown probably looks like this (incorrect):
+
+
+```markdown
 ## 🔍 Project Structure
 
+```
 
 DSAstronauts/
-|- app/
-|  |- routes.py
-|  |- database.py
-|  |- splitwise.py
-|  |- forms.py
-|  |- helpers.py
-|  |- templates/
-|  |- static/
-|- tests/
-|- requirements.txt
-|- README.md
-|- LICENSE
-|- .github/
+├── app/               # Main Flask app code
+│   ├── routes.py      # URL routing and logic
+│   ├── database.py    # DB models and setup
+│   ├── splitwise.py   # Expense-splitting logic
+│   ├── forms.py       # WTForms definitions
+│   ├── helpers.py     # Utility functions
+│   ├── templates/     # HTML templates (Jinja2)
+│   └── static/        # CSS/JS and assets
+├── tests/             # Unit and integration tests
+├── requirements.txt   # Python dependencies
+├── README.md          # Project overview
+├── LICENSE            # MIT License
+└── .github/           # GitHub Actions or config
 
+```
+```
 
 ## 🧪 Testing
 
