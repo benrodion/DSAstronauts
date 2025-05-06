@@ -51,7 +51,7 @@
    flask run
    ```
 
-```markdown
+
 ## 🔍 Project Structure
 
 ```
