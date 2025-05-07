@@ -47,9 +47,28 @@
 
 4. **Run the app:**
 
-   ```bash
-   flask run
-   ```
+
+
+**Option A – Windows (CMD / PowerShell):**
+
+```bash
+flask --app app.sandbox_flask_app run --debug
+```
+
+**Option B – macOS / Unix (if you encounter `ModuleNotFoundError`):**
+
+```bash
+python -m app.sandbox_flask_app
+```
+
+> ⚠️ **Note:** Make sure you are in the **root directory** of the project (where `requirements.txt` is located), not inside the `app/` folder.
+> If you still encounter issues, you can manually initialize modules by running:
+
+```bash
+python -m app.database
+python -m app.forms
+python -m app.helpers
+```
 
 
 ## 🔍 Project Structure
