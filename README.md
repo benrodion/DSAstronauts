@@ -46,20 +46,19 @@
    ```
 
 4. **Run the app:**
+ 
+On macOS/Linux:
 
+ ```bash
+export FLASK_APP=app
+flask run
+ ```
+On Windows (Command Prompt):
 
-
-**Option A – Windows (CMD / PowerShell):**
-
-```bash
-flask --app app.sandbox_flask_app run --debug
-```
-
-**Option B – macOS / Unix (if you encounter `ModuleNotFoundError`):**
-
-```bash
-python -m app.sandbox_flask_app
-```
+ ```bash
+set FLASK_APP=app
+flask run
+ ```
 
 > ⚠️ **Note:** Make sure you are in the **root directory** of the project (where `requirements.txt` is located), not inside the `app/` folder.
 > If you still encounter issues, you can manually initialize modules by running:
