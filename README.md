@@ -51,13 +51,13 @@ On macOS/Linux:
 
  ```bash
 export FLASK_APP=app
-flask run
+flask — app app run
  ```
 On Windows (Command Prompt):
 
  ```bash
 set FLASK_APP=app
-flask run
+flask — app app run
  ```
 
 > ⚠️ **Note:** Make sure you are in the **root directory** of the project (where `requirements.txt` is located), not inside the `app/` folder.
