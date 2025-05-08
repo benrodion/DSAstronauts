@@ -12,6 +12,8 @@
 - Simple expense balancing using Splitwise-like logic
 - SQLite database integration via SQLAlchemy
 
+Please note that in its current implementation, the app splits the transactions equally among *all* participants, including the person who paid for an expense. I.e. if A pays something for B and C, A will be part of the debt split in the current implementation.
+
 ## ⚙️ Tech Stack
 - **Backend**: Python, Flask, SQLAlchemy
 - **Frontend**: HTML/CSS (Jinja templates), Bootstrap
@@ -48,7 +50,7 @@
 4. **Run the app:**
 
    ```bash
-   flask run
+   flask --app app run
    ```
 
 ## 🔍 Project Structure
